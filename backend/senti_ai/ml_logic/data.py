@@ -5,7 +5,7 @@ from google.cloud import bigquery
 from colorama import Fore, Style
 from pathlib import Path
 from datetime import datetime
-from senti_ai.ml_logic.notification import send_pushover_notification
+from senti_ai.interface.notification import send_pushover_notification
 
 def save_data_to_bq(
         data: pd.DataFrame,
