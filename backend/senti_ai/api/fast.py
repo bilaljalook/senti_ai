@@ -1,18 +1,31 @@
-import fastapi
+from fastapi import FastAPI
 import pandas as pd
 from senti_ai.ml_logic.data import load_data_from_bq
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+@app.get("/get_historical")
 def get_historical(
         gcp_project:str,
         bq_dataset:str,
         table: str,
-    ) -> pd.DataFrame:
+    ):
     df = load_data_from_bq(gcp_project, bq_dataset, table)
-    return df
+    return df.to_dict(orient="records")
 
-def get_pred() -> pd.DataFrame:
+@app.get("/get_pred")
+def get_pred():
 
     ## MOCK PREDICTIONS START
     tomorrow = datetime.now() + timedelta(days=1)
@@ -30,4 +43,9 @@ def get_pred() -> pd.DataFrame:
     })
     ## MOCK PREDICTIONS END
 
-    return df
+    df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    return df.to_dict(orient="records")
+
+@app.get("/")
+def root():
+    return {'greeting': 'Hello'}
