@@ -4,7 +4,7 @@ from google.cloud import bigquery
 from colorama import Fore, Style
 from pathlib import Path
 
-def load_data_to_bq(
+def save_data_to_bq(
         data: pd.DataFrame,
         gcp_project:str,
         bq_dataset:str,
@@ -44,3 +44,17 @@ def load_data_to_bq(
     result = job.result()  # wait for the job to complete
 
     print(f"✅ Data saved to bigquery, with shape {data.shape}")
+
+def load_data_from_bq(
+        gcp_project:str,
+        bq_dataset:str,
+        table: str,
+    ) -> pd.DataFrame:
+
+    query = f"""SELECT {",".join(['date', 'sentiment_score'])} FROM `{gcp_project}`.{bq_dataset}.{table}"""
+    client = bigquery.Client(project=gcp_project)
+    query_job = client.query(query)
+    result = query_job.result()
+    df = result.to_dataframe()
+
+    return df
