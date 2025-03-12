@@ -1,6 +1,9 @@
 google-cloud-bigquery
 pyarrow
 ipykernel
-fastapi
 pandas
 numpy
+fastapi==0.108.0
+pytz
+uvicorn
+colorama
