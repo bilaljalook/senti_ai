@@ -20,12 +20,12 @@ def get_historical(
         gcp_project:str,
         bq_dataset:str,
         table: str,
-    ) -> pd.DataFrame:
+    ):
     df = load_data_from_bq(gcp_project, bq_dataset, table)
-    return df
+    return df.to_dict(orient="records")
 
 @app.get("/get_pred")
-def get_pred() -> pd.DataFrame:
+def get_pred():
 
     ## MOCK PREDICTIONS START
     tomorrow = datetime.now() + timedelta(days=1)
@@ -43,4 +43,9 @@ def get_pred() -> pd.DataFrame:
     })
     ## MOCK PREDICTIONS END
 
-    return df
+    df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    return df.to_dict(orient="records")
+
+@app.get("/")
+def root():
+    return {'greeting': 'Hello'}
