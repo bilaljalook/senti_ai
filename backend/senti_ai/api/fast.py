@@ -1,9 +1,21 @@
-import fastapi
+from fastapi import FastAPI
 import pandas as pd
 from senti_ai.ml_logic.data import load_data_from_bq
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+@app.get("/get_historical")
 def get_historical(
         gcp_project:str,
         bq_dataset:str,
@@ -12,6 +24,7 @@ def get_historical(
     df = load_data_from_bq(gcp_project, bq_dataset, table)
     return df
 
+@app.get("/get_pred")
 def get_pred() -> pd.DataFrame:
 
     ## MOCK PREDICTIONS START
