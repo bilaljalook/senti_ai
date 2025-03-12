@@ -8,9 +8,6 @@ requirements = [x.strip() for x in content if "git+" not in x]
 setup(name='sentiai',
       version="0.0.1",
       description="Bitcoin prediction model",
-      license="",
-      author="",
-      author_email="",
       install_requires=requirements,
       packages=find_packages(),
       # include_package_data: to install data from MANIFEST.in
