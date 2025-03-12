@@ -7,3 +7,4 @@ fastapi==0.108.0
 pytz
 uvicorn
 colorama
+db-dtypes
