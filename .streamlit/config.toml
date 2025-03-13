@@ -1,0 +1,12 @@
+#[theme]
+#primaryColor='#7E4AF4'
+#backgroundColor='white'
+#secondaryBackgroundColor='#C8D1CC'
+#textColor='black'
+#font='sans serif'
+
+
+[theme]
+base="light"
+primaryColor="#7e4af4"
+textColor="#313341"

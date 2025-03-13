@@ -78,3 +78,10 @@ with col2:
         #st.image("https://images.app.goo.gl/5eN51YRNPVwEXMpn9", width=200)
         st.slider(label='Days', min_value=1, max_value=30, step=1)
         st.line_chart(np.random.randn(50, 3))
+
+with st.container(border=True, height=550):
+    st.subheader('The accuracy of our model', divider=True)
+    #nasdaq_chart = pd.DataFrame(xxx)
+    #st.line_chart(nasdaq_chart)
+    st.slider(label='', min_value=1, max_value=10, step=1)
+    st.line_chart(np.random.randn(50, 3))
