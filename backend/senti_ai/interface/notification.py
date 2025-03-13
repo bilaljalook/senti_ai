@@ -8,11 +8,6 @@ def send_pushover_notification(
     user_key=AHMET_USER_KEY,
     api_token=PUSHOVER_API_TOKEN
     ):
-def send_pushover_notification(message, title=None, priority=1):
-
-    user_key=AHMET_USER_KEY
-    api_token=PUSHOVER_API_TOKEN
-
     payload = {
         "token": api_token,
         "user": user_key,
