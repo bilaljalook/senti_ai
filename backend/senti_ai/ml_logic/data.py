@@ -51,7 +51,7 @@ def load_data_from_bq(
         table: str,
     ) -> pd.DataFrame:
 
-    query = f"""SELECT {",".join(['date', 'sentiment_score'])} FROM `{gcp_project}`.{bq_dataset}.{table}"""
+    query = f"""SELECT * FROM `{gcp_project}`.{bq_dataset}.{table}"""
     client = bigquery.Client(project=gcp_project)
     query_job = client.query(query)
     result = query_job.result()

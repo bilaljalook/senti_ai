@@ -1,0 +1,31 @@
+Metadata-Version: 2.2
+Name: sentiai
+Version: 0.0.1
+Summary: Bitcoin prediction model
+Author: 
+Author-email: 
+Requires-Dist: google-cloud-bigquery
+Requires-Dist: pyarrow
+Requires-Dist: ipykernel
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: fastapi==0.108.0
+Requires-Dist: pytz
+Requires-Dist: uvicorn
+Requires-Dist: colorama
+Requires-Dist: db-dtypes
+Requires-Dist: tensorflow-macos==2.10.0; sys_platform == "darwin" and "ARM" in platform_version
+Requires-Dist: tensorflow==2.10.0; sys_platform == "darwin" and "ARM" not in platform_version
+Requires-Dist: tensorflow==2.10.0; sys_platform != "darwin"
+Requires-Dist: scipy==1.10.0
+Requires-Dist: scikit-learn==1.3.1
+Requires-Dist: mlflow==2.1.1
+Requires-Dist: prefect==2.19.2
+Requires-Dist: python-dotenv
+Requires-Dist: psycopg2-binary
+Requires-Dist: yfinance
+Requires-Dist: pushover
+Requires-Dist: pytest
+Requires-Dist: requests-mock
+Dynamic: requires-dist
+Dynamic: summary
