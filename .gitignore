@@ -1,2 +1,5 @@
 .env
 raw_data/
+backend/senti_ai.svg
+backend/dist/sentiai-0.0.1.tar.gz
+.python-version
