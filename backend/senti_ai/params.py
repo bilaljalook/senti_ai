@@ -45,6 +45,8 @@ BQ_DATASET = os.environ.get("BQ_DATASET")
 
 AHMET_USER_KEY = os.environ.get("AHMET_USER_KEY")
 KSENIA_USER_KEY = os.environ.get("KSENIA_USER_KEY")
+BILL_USER_KEY = os.environ.get("BILL_USER_KEY")
+PHILIP_USER_KEY = os.environ.get("PHILIP_USER_KEY")
 PUSHOVER_API_TOKEN = os.environ.get("PUSHOVER_API_TOKEN")
 
 MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI")
