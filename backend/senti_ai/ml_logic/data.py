@@ -6,6 +6,8 @@ from colorama import Fore, Style
 from pathlib import Path
 from datetime import datetime
 from senti_ai.interface.notification import send_pushover_notification
+from senti_ai.ml_logic.preprocessor import calculate_indicators
+from senti_ai.params import *
 
 def save_data_to_bq(
         data: pd.DataFrame,
@@ -47,6 +49,9 @@ def save_data_to_bq(
     result = job.result()  # wait for the job to complete
 
     print(f"✅ Data saved to bigquery, with shape {data.shape}")
+    pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
+    for key in pushover_user_keys:
+        send_pushover_notification('Daily fetching successful', user_key=key)
 
 def load_data_from_bq(
         gcp_project:str,
@@ -60,8 +65,37 @@ def load_data_from_bq(
     query_job = client.query(query)
     result = query_job.result()
     df = result.to_dataframe()
+    df = df.sort_values('date', ascending=False)
 
     return df
+
+
+def combine_all_data_and_save():
+    df_small = fetch_daily_data()
+    df_historical = load_data_from_bq(GCP_PROJECT_AHMET,BQ_DATASET,"raw")
+
+    df_combined["BTC_Close_MA30"] = None
+    df_combined["NASDAQ_Close_MA30"] = None
+    df_combined["BTC_Volatility"] = None
+    df_combined["NASDAQ_Volatility"] = None
+
+    df_combined = pd.concat([df_historical, df_small], ignore_index=True)
+    df_combined = calculate_indicators(df_combined)
+
+    pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
+    has_nan = df_combined.isna().any()
+
+    if (df_combined.shape[1] == 17) & (not has_nan.any()):
+
+        for key in pushover_user_keys:
+            send_pushover_notification('Daily and hist data combined and saved successfully', user_key=key)
+        save_data_to_bq(df_combined,GCP_PROJECT_AHMET,BQ_DATASET,"raw", truncate=True)
+
+    else:
+        for key in pushover_user_keys:
+            send_pushover_notification('Daily and hist data combine and save failed', user_key=key)
+
+    return None
 
 
 def fetch_daily_data():
@@ -123,18 +157,32 @@ def fetch_daily_data():
         "BTC_High":df_btc['High']['BTC-USD'],
         "BTC_Low":df_btc['Low']['BTC-USD'],
         "BTC_Open":df_btc['Open']['BTC-USD'],
-        "BTC_Volume":"",
+        "BTC_Volume":df_btc['Volume']['BTC-USD'],
         "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
         "NASDAQ_Close":df_nasdaq["Close"]['^IXIC'],
         "NASDAQ_High":df_nasdaq["Close"]['^IXIC'],
         "NASDAQ_Low":df_nasdaq["Low"]['^IXIC'],
         "NASDAQ_Open":df_nasdaq["Open"]['^IXIC'],
-        "NASDAQ_Volume":"",
-        "NASDAQ_sentiment_score":stock_fear_greed_df
+        "NASDAQ_Volume":df_nasdaq['Volume']['^IXIC'],
+        "NASDAQ_sentiment_score":stock_fear_greed_df,
+        # "BTC_Close_MA30": None,
+        # "NASDAQ_Close_MA30": None,
+        # "BTC_Volatility": None,
+        # "NASDAQ_Volatility": None
         })
 
     df_result.index = [1]
 
-    send_pushover_notification('Daily fetching successful')
+    has_nan = df_result.isna().any()
 
-    return df_result
+    pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
+
+    if (df_result.shape[1] == 13) & (not has_nan.any()):
+
+        for key in pushover_user_keys:
+            send_pushover_notification('Daily fetching successful', user_key=key)
+        return df_result
+
+    else:
+        for key in pushover_user_keys:
+            send_pushover_notification('Daily fetching failed', user_key=key)
