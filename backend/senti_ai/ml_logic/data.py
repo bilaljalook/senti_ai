@@ -146,59 +146,59 @@ def fetch_daily_data():
 
     #### BTC and NASDAQ from yfinance ## START
 
-    # today = datetime.today().date()
-    # tomorrow = today + timedelta(days=1)
+    today = datetime.today().date()
+    tomorrow = today + timedelta(days=1)
 
-    # tickers = ["BTC-USD", "^IXIC"]
-    # df_combined = yf.download(
-    # tickers,
-    # start=today,
-    # end=tomorrow,
-    # progress=False
-    # )
+    tickers = ["BTC-USD", "^IXIC"]
+    df_combined = yf.download(
+    tickers,
+    start=today,
+    end=tomorrow,
+    progress=False
+    )
 
-    # df_today = df_combined.iloc[-1:]
-    # btc_close_today = df_today['Close']['BTC-USD']
-    # nasdaq_close_today = df_today['Close']['^IXIC']
+    df_today = df_combined.iloc[-1:]
+    btc_close_today = df_today['Close']['BTC-USD']
+    nasdaq_close_today = df_today['Close']['^IXIC']
 
     #### BTC and NASDAQ from yfinance ## END
 
 
     #### Construct final dataframe START
 
-    # df_result = pd.DataFrame({
-    #     "date": datetime.today().date(),
-    #     "BTC_Close":df_today['Close']['BTC-USD'],
-    #     "BTC_High":df_today['High']['BTC-USD'],
-    #     "BTC_Low":df_today['Low']['BTC-USD'],
-    #     "BTC_Open":df_today['Open']['BTC-USD'],
-    #     "BTC_Volume":df_today['Volume']['BTC-USD'],
-    #     "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
-    #     "NASDAQ_Close":df_today['Close']['^IXIC'],
-    #     "NASDAQ_High":df_today['High']['^IXIC'],
-    #     "NASDAQ_Low":df_today['Low']['^IXIC'],
-    #     "NASDAQ_Open":df_today['Open']['^IXIC'],
-    #     "NASDAQ_Volume":df_today['Volume']['^IXIC'],
-    #     "NASDAQ_sentiment_score":stock_fear_greed_df,
-    #     })
+    df_result = pd.DataFrame({
+        "date": datetime.today().date(),
+        "BTC_Close":df_today['Close']['BTC-USD'],
+        "BTC_High":df_today['High']['BTC-USD'],
+        "BTC_Low":df_today['Low']['BTC-USD'],
+        "BTC_Open":df_today['Open']['BTC-USD'],
+        "BTC_Volume":df_today['Volume']['BTC-USD'],
+        "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
+        "NASDAQ_Close":df_today['Close']['^IXIC'],
+        "NASDAQ_High":df_today['High']['^IXIC'],
+        "NASDAQ_Low":df_today['Low']['^IXIC'],
+        "NASDAQ_Open":df_today['Open']['^IXIC'],
+        "NASDAQ_Volume":df_today['Volume']['^IXIC'],
+        "NASDAQ_sentiment_score":stock_fear_greed_df,
+        }, index=[0])
 
     print(f"✅ Putting together mock df_result")
 
-    df_result = pd.DataFrame({
-        "date": datetime.today().date(),
-        "BTC_Close":81461.62,
-        "BTC_High":81961.26,
-        "BTC_Low":76808.10,
-        "BTC_Open":78582.16,
-        "BTC_Volume":58110119936,
-        "BTC_sentiment_score":24,
-        "NASDAQ_Close":17436.10,
-        "NASDAQ_High":17687.40,
-        "NASDAQ_Low":17238.24,
-        "NASDAQ_Open":17443.09,
-        "NASDAQ_Volume":9177320000,
-        "NASDAQ_sentiment_score":13,
-        }, index=[0])
+    # df_result = pd.DataFrame({
+    #     "date": datetime.today().date(),
+    #     "BTC_Close":81461.62,
+    #     "BTC_High":81961.26,
+    #     "BTC_Low":76808.10,
+    #     "BTC_Open":78582.16,
+    #     "BTC_Volume":58110119936,
+    #     "BTC_sentiment_score":24,
+    #     "NASDAQ_Close":17436.10,
+    #     "NASDAQ_High":17687.40,
+    #     "NASDAQ_Low":17238.24,
+    #     "NASDAQ_Open":17443.09,
+    #     "NASDAQ_Volume":9177320000,
+    #     "NASDAQ_sentiment_score":13,
+    #     }, index=[0])
 
     print(df_result)
     print(f"✅ Collected data shape: {df_result.shape}")
