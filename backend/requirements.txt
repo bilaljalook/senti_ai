@@ -21,3 +21,4 @@ yfinance
 pushover
 pytest
 requests-mock
+datetime
