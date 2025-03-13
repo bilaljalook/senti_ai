@@ -37,7 +37,9 @@ import numpy as np
 # for env, valid_options in env_valid_options.items():
 #     validate_env_value(env, valid_options)
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+GCP_PROJECT_AHMET = os.environ.get("GCP_PROJECT_AHMET")
+GCP_PROJECT_BILL = os.environ.get("GCP_PROJECT_BILL")
+
 GCP_REGION = os.environ.get("GCP_REGION")
 
 BQ_REGION = os.environ.get("BQ_REGION")
