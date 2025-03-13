@@ -16,8 +16,11 @@ python-dotenv
 psycopg2-binary
 yfinance
 pushover
+<<<<<<< HEAD
 pytest
 requests-mock
+=======
+>>>>>>> origin/master
 
 [:sys_platform != "darwin"]
 tensorflow==2.10.0

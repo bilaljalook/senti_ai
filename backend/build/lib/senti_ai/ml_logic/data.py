@@ -5,7 +5,7 @@ from google.cloud import bigquery
 from colorama import Fore, Style
 from pathlib import Path
 from datetime import datetime
-from senti_ai.interface.notification import send_pushover_notification
+from senti_ai.ml_logic.notification import send_pushover_notification
 
 def save_data_to_bq(
         data: pd.DataFrame,
@@ -54,7 +54,7 @@ def load_data_from_bq(
         table: str,
     ) -> pd.DataFrame:
 
-    #query = f"""SELECT * FROM `{gcp_project}`.{bq_dataset}.{table}"""
+    #query = f"""SELECT {",".join(['date', 'sentiment_score'])} FROM `{gcp_project}`.{bq_dataset}.{table}"""
     query = f"""SELECT * FROM `{gcp_project}`.{bq_dataset}.{table}"""
     client = bigquery.Client(project=gcp_project)
     query_job = client.query(query)

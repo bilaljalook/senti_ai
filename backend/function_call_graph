@@ -1,0 +1,13 @@
+digraph {
+	rankdir=TB
+	get_pred [label="get_pred()"]
+	get_historical [label="get_historical()"]
+	save_data_to_bq [label="save_data_to_bq()"]
+	load_data_from_bq [label="load_data_from_bq()"]
+	fetch_daily_data [label="fetch_daily_data()"]
+	test_send_pushover_notification [label="test_send_pushover_notification()"]
+	get_historical -> load_data_from_bq
+	load_data_from_bq -> fetch_daily_data
+	fetch_daily_data -> save_data_to_bq
+	test_send_pushover_notification -> fetch_daily_data
+}

@@ -2,8 +2,8 @@ Metadata-Version: 2.2
 Name: sentiai
 Version: 0.0.1
 Summary: Bitcoin prediction model
-Author: 
-Author-email: 
+Author:
+Author-email:
 Requires-Dist: google-cloud-bigquery
 Requires-Dist: pyarrow
 Requires-Dist: ipykernel
@@ -25,7 +25,10 @@ Requires-Dist: python-dotenv
 Requires-Dist: psycopg2-binary
 Requires-Dist: yfinance
 Requires-Dist: pushover
+<<<<<<< HEAD
 Requires-Dist: pytest
 Requires-Dist: requests-mock
+=======
+>>>>>>> origin/master
 Dynamic: requires-dist
 Dynamic: summary
