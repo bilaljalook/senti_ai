@@ -14,7 +14,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     df.loc[last_row_index, 'NASDAQ_Volatility'] = df['NASDAQ_Close'].rolling(window=30).std().iloc[-1]
     df.loc[last_row_index, 'BTC_Volatility'] = df['BTC_Close'].rolling(window=30).std().iloc[-1]
-    df.loc[last_row_index, 'BTC_Close_MA'] = df['BTC_Close'].rolling(window=30).mean().iloc[-1]
-    df.loc[last_row_index, 'NASDAQ_Close_MA'] = df['NASDAQ_Close'].rolling(window=30).mean().iloc[-1]
+    df.loc[last_row_index, 'BTC_Close_MA30'] = df['BTC_Close'].rolling(window=30).mean().iloc[-1]
+    df.loc[last_row_index, 'NASDAQ_Close_MA30'] = df['NASDAQ_Close'].rolling(window=30).mean().iloc[-1]
 
     return df
