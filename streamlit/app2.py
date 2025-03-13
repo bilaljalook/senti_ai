@@ -26,7 +26,6 @@ st.markdown(
 
 # --- API-based Data Loading Functions ---
 
-@st.cache_data
 def load_historical_data_api():
     url = "http://web.senti-ai.net:5367/get_historical?gcp_project=supple-folder-448412-n9&bq_dataset=sentiai&table=raw"
     try:
@@ -34,8 +33,7 @@ def load_historical_data_api():
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException as e:
-        st.error(f"Error fetching historical data from API: {str(e)}")
-        return {}
+        return None, []
 
     datasets = {
         "BTC Price (Daily)": None,
@@ -45,11 +43,10 @@ def load_historical_data_api():
     }
 
     if not isinstance(data, list) or not data:
-        st.error("Unexpected historical API response format. Expected a non-empty list of records.")
-        return datasets
+        return None, []
 
     df = pd.DataFrame(data)
-    st.write("**Historical API returned columns:**", df.columns.tolist())
+    columns = df.columns.tolist()  # Capture columns to return
 
     btc_columns = {
         "date": "Date",
@@ -92,9 +89,8 @@ def load_historical_data_api():
                 nasdaq_df["sentiment score"] = pd.to_numeric(nasdaq_df["sentiment score"], errors="coerce")
                 datasets["Fear & Greed Index (Nasdaq)"] = nasdaq_df[["sentiment score"]].dropna()
 
-    return datasets
+    return datasets, columns
 
-@st.cache_data
 def load_prediction_data_api():
     url = "http://web.senti-ai.net:5367/get_pred"
     try:
@@ -102,8 +98,7 @@ def load_prediction_data_api():
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException as e:
-        st.error(f"Error fetching prediction data from API: {str(e)}")
-        return {}
+        return None, []
 
     datasets = {
         "BTC Predictions": None,
@@ -111,11 +106,10 @@ def load_prediction_data_api():
     }
 
     if not isinstance(data, list) or not data:
-        st.error("Unexpected prediction API response format. Expected a non-empty list of records.")
-        return datasets
+        return None, []
 
     df = pd.DataFrame(data)
-    st.write("**Prediction API returned columns:**", df.columns.tolist())
+    columns = df.columns.tolist()  # Capture columns to return
 
     df["Date"] = pd.to_datetime(df["date"], errors="coerce")
     df = df.rename(columns={"close": "Close"}).drop(columns=["date"])
@@ -124,32 +118,35 @@ def load_prediction_data_api():
     if not df.empty:
         datasets["BTC Predictions"] = df  # Assuming BTC predictions
 
-    return datasets
+    return datasets, columns
 
 # --- Plotting Function ---
 
 def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
+    # Initialize a list to collect debug outputs
+    debug_outputs = []
+
     # Validate and prepare data
     if "Close" not in price_df.columns or price_df["Close"].isna().all():
-        st.error("No valid price data available for plotting. Check the raw data.")
-        st.dataframe(price_df)  # Debug: Show raw data to diagnose
-        return go.Figure()
+        debug_outputs.append(("Error", "No valid price data available for plotting. Check the raw data."))
+        debug_outputs.append(("Price Data", price_df))
+        return go.Figure(), debug_outputs
 
     # Calculate Moving Average
     ma = price_df["Close"].rolling(window=ma_window, min_periods=1).mean()
 
     # Debug: Show raw Fear & Greed data before merging
     if fear_df is not None and not fear_df.empty and "sentiment score" in fear_df.columns:
-        st.write("**Debug: Raw Fear & Greed Data Sample (Before Merge)**", fear_df.head(10))
-        st.write("**Debug: Fear & Greed Data Statistics**", fear_df["sentiment score"].describe())
+        debug_outputs.append(("Debug: Raw Fear & Greed Data Sample (Before Merge)", fear_df.head(10)))
+        debug_outputs.append(("Debug: Fear & Greed Data Statistics", fear_df["sentiment score"].describe()))
 
     # Merge datasets for aligned dates using a left join to preserve price data
     merged_df = price_df.join(fear_df, how="left").sort_index()
 
     # Debug: Print merged data to verify
-    st.write("**Debug: Merged Data Sample**", merged_df.head(10))
+    debug_outputs.append(("Debug: Merged Data Sample", merged_df.head(10)))
     if "sentiment score" in merged_df.columns:
-        st.write("**Debug: Sentiment Data Statistics (After Merge)**", merged_df["sentiment score"].describe())
+        debug_outputs.append(("Debug: Sentiment Data Statistics (After Merge)", merged_df["sentiment score"].describe()))
 
     # Create subplots: one for main chart (Price, MA, Fear & Greed), one for Volume
     fig = make_subplots(
@@ -196,8 +193,8 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
                     end_idx = valid_indices[i-1]
                     segment_df = merged_df.loc[start_idx:end_idx].copy()
                     if not segment_df.empty:
-                        st.write(f"**Debug: Segment {segment_count} from {start_idx} to {end_idx}**", segment_df[[sentiment_col]])
-                        st.write(f"**Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}**", segment_df[sentiment_col].describe())
+                        debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
+                        debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
                         fig.add_trace(go.Scatter(
                             x=segment_df.index,
                             y=segment_df[sentiment_col],
@@ -213,8 +210,8 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
             end_idx = valid_indices[-1]
             segment_df = merged_df.loc[start_idx:end_idx].copy()
             if not segment_df.empty:
-                st.write(f"**Debug: Segment {segment_count} from {start_idx} to {end_idx}**", segment_df[[sentiment_col]])
-                st.write(f"**Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}**", segment_df[sentiment_col].describe())
+                debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
+                debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
                 fig.add_trace(go.Scatter(
                     x=segment_df.index,
                     y=segment_df[sentiment_col],
@@ -225,7 +222,7 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
                     showlegend=True
                 ), row=1, col=1, secondary_y=True)  # Use secondary y-axis for Fear & Greed Index
         else:
-            st.warning("No valid (non-NaN) Fear & Greed Index data available to plot.")
+            debug_outputs.append(("Warning", "No valid (non-NaN) Fear & Greed Index data available to plot."))
 
     # Volume - Row 2, on primary y-axis for the second subplot
     if "Volume" in merged_df.columns and not merged_df["Volume"].isna().all():
@@ -250,7 +247,7 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         height=1000,
         legend=dict(
             x=0.5,
-            y=-0.15,
+            y=-0.3,  # Adjusted to position legend below the Volume subplot's date axis
             xanchor="center",
             yanchor="top",
             orientation="h",
@@ -313,21 +310,32 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         col=1
     )
 
-    # Debug: Print final trace data
-    st.write("**Debug: Plotly Traces**", [trace.name for trace in fig.data])
+    debug_outputs.append(("Debug: Plotly Traces", [trace.name for trace in fig.data]))
 
-    st.plotly_chart(fig, use_container_width=True)
+    return fig, debug_outputs
 
 # --- Main Application ---
 
 def main():
+    # Initialize session state for button control
+    if 'show_api_debug' not in st.session_state:
+        st.session_state.show_api_debug = False
+
     # Sidebar
     st.sidebar.title("Market Selection")
     market = st.sidebar.selectbox("Choose Market", ["Bitcoin (BTC)", "Nasdaq"])
 
     # Load data from both APIs
-    historical_datasets = load_historical_data_api()
-    prediction_datasets = load_prediction_data_api()
+    historical_datasets, historical_columns = load_historical_data_api()
+    prediction_datasets, prediction_columns = load_prediction_data_api()
+
+    # Handle errors
+    if historical_datasets is None:
+        st.error("Error loading historical data from API.")
+        return
+    if prediction_datasets is None:
+        st.error("Error loading prediction data from API.")
+        return
 
     all_datasets = {**historical_datasets, **prediction_datasets}
 
@@ -392,8 +400,9 @@ def main():
     if fear_df is not None and not fear_df.empty:
         fear_df = fear_df[(fear_df.index.year >= start_year) & (fear_df.index.year <= end_year)]
 
-    # Plot chart with filtered data
-    plot_market_chart(price_df, fear_df, market, ma_window)
+    # Plot chart with filtered data and capture debug outputs
+    fig, debug_outputs = plot_market_chart(price_df, fear_df, market, ma_window)
+    st.plotly_chart(fig, use_container_width=True)
 
     # Show raw data
     if st.sidebar.checkbox("Show Raw Data"):
@@ -423,41 +432,24 @@ def main():
                 ))
         st.write("")  # Add spacing
 
-    # Show API and debug info behind a button
+    # Show API and debug info behind a button at the bottom
     if st.sidebar.button("Show API & Debug Info"):
-        st.write("**Historical API returned columns:**")
-        st.write([
-            "date",
-            "BTC_Close",
-            "BTC_High",
-            "BTC_Low",
-            "BTC_Open",
-            "BTC_Volume",
-            "BTC_sentiment_score",
-            "NASDAQ_Close",
-            "NASDAQ_High",
-            "NASDAQ_Low",
-            "NASDAQ_Open",
-            "NASDAQ_Volume",
-            "NASDAQ_sentiment_score"
-        ])
-        st.write("**Prediction API returned columns:**")
-        st.write([
-            "date",
-            "close"
-        ])
-        st.write("**Available Historical Datasets:**")
-        st.write([
-            "BTC Price (Daily)",
-            "Fear & Greed Index (BTC)",
-            "Nasdaq Price (Daily)",
-            "Fear & Greed Index (Nasdaq)"
-        ])
-        st.write("**Available Prediction Datasets:**")
-        st.write([
-            "BTC Predictions",
-            "Nasdaq Predictions"
-        ])
+        st.session_state.show_api_debug = not st.session_state.show_api_debug
+
+    if st.session_state.show_api_debug:
+        with st.expander("API & Debug Info", expanded=True):
+            st.write("**Historical API returned columns:**")
+            st.write(historical_columns)
+            st.write("**Prediction API returned columns:**")
+            st.write(prediction_columns)
+            st.write("**Available Historical Datasets:**")
+            st.write(list(historical_datasets.keys()))
+            st.write("**Available Prediction Datasets:**")
+            st.write(list(prediction_datasets.keys()))
+            # Display debug outputs from plot_market_chart
+            for label, output in debug_outputs:
+                st.write(f"**{label}**")
+                st.write(output)
 
 if __name__ == "__main__":
     main()
