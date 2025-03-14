@@ -44,8 +44,8 @@ def preprocess_raw_data(df, input_seq_length, forecast_horizon):
 
 
 def predict(
-    input_seq_length=LSTM_INPUT_SEQ_LENGTH,
-    forecast_horizon=LSTM_FORECAST_HORIZON,
+    input_seq_length=LSTM_INPUT_SEQ_LENGTH,  # Fixed variable name
+    forecast_horizon=LSTM_FORECAST_HORIZON,  # Fixed variable name
     data_source=DATA_SOURCE,
     data_path=DATA_PATH,
     generate_plot=True
