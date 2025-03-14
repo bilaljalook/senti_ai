@@ -1,5 +1,9 @@
 import os
 import numpy as np
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 ##################  VARIABLES  ##################
 # DATA_SIZE = os.environ.get("DATA_SIZE")
@@ -59,3 +63,25 @@ MLFLOW_TRACKIN_PASSWORD = os.environ.get("MLFLOW_TRACKIN_PASSWORD")
 
 PREFECT_FLOW_NAME = os.environ.get("PREFECT_FLOW_NAME")
 PREFECT_LOG_LEVEL = os.environ.get("PREFECT_LOG_LEVEL")
+
+# LSTM model settings
+MODEL_NAME = os.getenv("MODEL_NAME", "sentiai_model")
+MODEL_EXPERIMENT = os.getenv("MODEL_EXPERIMENT", "sentiai_lstm_experiment")
+MODEL_INPUT_SEQ_LENGTH = int(os.getenv("LSTM_INPUT_SEQ_LENGTH", 30))
+MODEL_FORECAST_HORIZON = int(os.getenv("LSTM_FORECAST_HORIZON", 30))
+MODEL_MAX_EPOCHS = int(os.getenv("LSTM_MAX_EPOCHS", 100))
+MODEL_BATCH_SIZE = int(os.getenv("LSTM_BATCH_SIZE", 32))
+MODEL_LEARNING_RATE = float(os.getenv("LSTM_LEARNING_RATE", 0.001))
+MODEL_EARLY_STOPPING_PATIENCE = int(os.getenv("LSTM_EARLY_STOPPING_PATIENCE", 15))
+
+# Data settings
+DATA_SOURCE = os.getenv("DATA_SOURCE", "bigquery")
+DATA_PATH = os.getenv("DATA_PATH")
+
+# Model settings
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
+DEFAULT_MODEL_TYPE = os.getenv("DEFAULT_MODEL_TYPE", "basic")
+
+# Testing settings
+TEST_SIZE = float(os.getenv("TEST_SIZE", 0.2))
+RANDOM_SEED = int(os.getenv("RANDOM_SEED", 42))

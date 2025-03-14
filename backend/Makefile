@@ -24,6 +24,51 @@ run_workflow:
 run_api:
 	uvicorn taxifare.api.fast:app --reload
 
+#################### BITCOIN MODEL ACTIONS ###################
+# Setup MLflow experiments
+setup_mlflow:
+	python -c 'from senti_ai.ml_logic.registry import create_mlflow_experiment; create_mlflow_experiment()'
+
+# Train the basic model
+train_basic:
+	python -m senti_ai.interface.main train
+
+# Train the LSTM model with default parameters
+train_lstm:
+	python -m senti_ai.train_lstm
+
+# Train the LSTM model with custom parameters
+train_lstm_custom:
+	python -m senti_ai.train_lstm --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON) --epochs $(EPOCHS)
+
+# Make predictions with the basic model
+predict_basic:
+	python -m senti_ai.interface.main predict
+
+# Make predictions with the LSTM model
+predict_lstm:
+	python -m senti_ai.predict_lstm
+
+# Make predictions with the LSTM model with custom parameters
+predict_lstm_custom:
+	python -m senti_ai.predict_lstm --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON)
+
+# Deploy a model to MLflow staging environment
+deploy_staging:
+	python -c 'from senti_ai.ml_logic.registry import register_model_for_deployment; register_model_for_deployment(model_type="$(MODEL_TYPE)", stage="Staging")'
+
+# Deploy a model to MLflow production environment
+deploy_production:
+	python -c 'from senti_ai.ml_logic.registry import register_model_for_deployment; register_model_for_deployment(model_type="$(MODEL_TYPE)", stage="Production")'
+
+# Run full LSTM pipeline: train, evaluate, and deploy to staging
+run_lstm_pipeline: setup_mlflow train_lstm
+	python -c 'from senti_ai.ml_logic.registry import register_model_for_deployment; register_model_for_deployment(model_type="lstm", stage="Staging")'
+
+# Run full basic model pipeline: train, evaluate, and deploy to staging
+run_basic_pipeline: setup_mlflow train_basic
+	python -c 'from senti_ai.ml_logic.registry import register_model_for_deployment; register_model_for_deployment(model_type="basic", stage="Staging")'
+
 ##################### TESTS #####################
 test_gcp_setup:
 	@pytest \
@@ -63,6 +108,11 @@ test_api_on_prod:
 test_notifications:
 	pytest \
 	tests/notifications/test_pushover_notification.py::test_send_pushover_notification -W "ignore"
+
+# Test the LSTM model
+test_lstm:
+	pytest \
+	tests/ml_logic/test_model.py -W "ignore"
 
 ################### DATA SOURCES ACTIONS ################
 
@@ -111,7 +161,6 @@ reset_gcs_files:
 
 reset_all_files: reset_local_files reset_bq_files reset_gcs_files
 
-
 ##################### CLEANING #####################
 
 clean:
@@ -124,3 +173,25 @@ clean:
 	@rm -f **/.DS_Store
 	@rm -f **/*Zone.Identifier
 	@rm -f **/.ipynb_checkpoints
+
+# Clean MLflow artifacts
+clean_mlflow:
+	@rm -fr mlruns
+	@rm -f best_bitcoin_model.h5
+	@rm -f bitcoin_price_prediction_model_test.h5
+
+# Help target to show available commands
+help:
+	@echo "Available commands:"
+	@echo "make setup_mlflow                 - Set up MLflow experiments"
+	@echo "make train_basic                  - Train the basic model"
+	@echo "make train_lstm                   - Train the LSTM model with default parameters"
+	@echo "make train_lstm_custom            - Train the LSTM model with custom parameters (use with INPUT_SEQ_LENGTH, FORECAST_HORIZON, EPOCHS)"
+	@echo "make predict_basic                - Make predictions with the basic model"
+	@echo "make predict_lstm                 - Make predictions with the LSTM model"
+	@echo "make predict_lstm_custom          - Make predictions with custom parameters"
+	@echo "make deploy_staging MODEL_TYPE=lstm|basic   - Deploy a model to staging"
+	@echo "make deploy_production MODEL_TYPE=lstm|basic - Deploy a model to production"
+	@echo "make run_lstm_pipeline            - Run full LSTM pipeline"
+	@echo "make run_basic_pipeline           - Run full basic model pipeline"
+	@echo "make clean_mlflow                 - Clean MLflow artifacts"
