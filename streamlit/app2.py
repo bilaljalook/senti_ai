@@ -1,11 +1,14 @@
 import streamlit as st
-import pandas as pd
 import requests
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from datetime import datetime
+import streamlit.components.v1 as components
+import numpy as np
+import pandas as pd
+import datetime
 
-# Add custom CSS for spacing and styling
+# Set page config as the first Streamlit command
+st.set_page_config(page_title='Historical overview', layout='wide')
+
+# Add custom CSS for spacing, styling, and slider thumb color
 st.markdown(
     """
     <style>
@@ -15,17 +18,71 @@ st.markdown(
     }
     .element-container, .stMarkdown, .stDataFrame {
         margin-bottom: 2rem;
+        padding: 0 !important;  /* Remove default padding */
     }
-    .stSelectbox, .stSlider, .stCheckbox {
+    .stSelectbox, .stSlider, .stCheck {
         margin-bottom: 1.5rem;
+    }
+
+    /* Custom slider thumb styling for all browsers with specific sidebar targeting */
+    .stSideBar .stSlider [type="range"]::-webkit-slider-thumb {
+        background: red !important;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .stSideBar .stSlider [type="range"]::-moz-range-thumb {
+        background: red !important;
+        -moz-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .stSideBar .stSlider [type="range"]::-ms-thumb {
+        background: red !important;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Optional: Style the unselected portion of the track */
+    .stSideBar .stSlider [type="range"]::-webkit-slider-runnable-track {
+        background: #ddd;
+    }
+    .stSideBar .stSlider [type="range"]::-moz-range-track {
+        background: #ddd;
+    }
+    .stSideBar .stSlider [type="range"]::-ms-track {
+        background: #ddd;
+    }
+
+    /* Pure CSS hack to override the "filled" portion of the slider in Streamlit */
+    .stSideBar [data-testid="stSlider"] > div [data-baseweb="slider"] > div:nth-child(2) {
+        background-color: red !important;
+    }
+
+    /* Enforce label color to black */
+    .stSideBar .stSlider label {
+        color: black !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# --- API-based Data Loading Functions ---
-
+# Data loading functions with updated caching
+@st.cache_data
 def load_historical_data_api():
     url = "http://web.senti-ai.net:5367/get_historical?gcp_project=supple-folder-448412-n9&bq_dataset=sentiai&table=raw"
     try:
@@ -91,6 +148,7 @@ def load_historical_data_api():
 
     return datasets, columns
 
+@st.cache_data
 def load_prediction_data_api():
     url = "http://web.senti-ai.net:5367/get_pred"
     try:
@@ -111,345 +169,142 @@ def load_prediction_data_api():
     df = pd.DataFrame(data)
     columns = df.columns.tolist()  # Capture columns to return
 
-    df["Date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df.rename(columns={"close": "Close"}).drop(columns=["date"])
-    df = df.dropna(subset=["Date"]).drop_duplicates(subset=["Date"]).set_index("Date")
+    # Process BTC Predictions
+    btc_df = df.copy()
+    btc_df["Date"] = pd.to_datetime(btc_df["date"], errors="coerce")
+    btc_df = btc_df.drop(columns=["date"], errors="ignore").rename(columns={"close": "Close"})
+    btc_df = btc_df.dropna(subset=["Date"]).drop_duplicates(subset=["Date"]).set_index("Date")
+    if not btc_df.empty:
+        datasets["BTC Predictions"] = btc_df
 
-    if not df.empty:
-        datasets["BTC Predictions"] = df  # Assuming BTC predictions
+    # Generate Nasdaq Predictions by scaling BTC's prediction data
+    if not btc_df.empty:
+        nasdaq_current_price = 20000  # Set first predicted close to 20,000 as per user
+        first_date = btc_df.index[0]
+        btc_first_close = btc_df.loc[first_date, "Close"]
+        ratios = btc_df["Close"] / btc_first_close  # Get relative changes from first predicted close
+        nasdaq_pred_df = pd.DataFrame({"Close": nasdaq_current_price * ratios}, index=btc_df.index)
+        datasets["Nasdaq Predictions"] = nasdaq_pred_df
 
     return datasets, columns
 
-# --- Plotting Function ---
-
-def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
-    # Initialize a list to collect debug outputs
-    debug_outputs = []
-
-    # Validate and prepare data
-    if "Close" not in price_df.columns or price_df["Close"].isna().all():
-        debug_outputs.append(("Error", "No valid price data available for plotting. Check the raw data."))
-        debug_outputs.append(("Price Data", price_df))
-        return go.Figure(), debug_outputs
-
-    # Calculate Moving Average
-    ma = price_df["Close"].rolling(window=ma_window, min_periods=1).mean()
-
-    # Debug: Show raw Fear & Greed data before merging
-    if fear_df is not None and not fear_df.empty and "sentiment score" in fear_df.columns:
-        debug_outputs.append(("Debug: Raw Fear & Greed Data Sample (Before Merge)", fear_df.head(10)))
-        debug_outputs.append(("Debug: Fear & Greed Data Statistics", fear_df["sentiment score"].describe()))
-
-    # Merge datasets for aligned dates using a left join to preserve price data
-    merged_df = price_df.join(fear_df, how="left").sort_index()
-
-    # Debug: Print merged data to verify
-    debug_outputs.append(("Debug: Merged Data Sample", merged_df.head(10)))
-    if "sentiment score" in merged_df.columns:
-        debug_outputs.append(("Debug: Sentiment Data Statistics (After Merge)", merged_df["sentiment score"].describe()))
-
-    # Create subplots: one for main chart (Price, MA, Fear & Greed), one for Volume
-    fig = make_subplots(
-        rows=2,
-        cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.1,
-        row_heights=[0.7, 0.3],
-        subplot_titles=["Price, MA, and Fear & Greed Index", "Volume"],
-        specs=[[{"secondary_y": True}], [{}]]  # Enable secondary y-axis for the first row
-    )
-
-    # Main chart (Price, MA, Fear & Greed) - Row 1
-    # Price (Close) - Added first with increased visibility, on primary left y-axis (y)
-    fig.add_trace(go.Scatter(
-        x=merged_df.index,
-        y=merged_df["Close"],
-        mode="lines",
-        name=f"{market_name} Price",
-        line=dict(color="blue", width=3),
-        showlegend=True
-    ), row=1, col=1)
-
-    # Moving Average - Added after price, on primary left y-axis (y)
-    fig.add_trace(go.Scatter(
-        x=merged_df.index,
-        y=ma,
-        mode="lines",
-        name=f"{ma_window}-Day MA",
-        line=dict(color="orange", width=2),
-        showlegend=True
-    ), row=1, col=1)
-
-    # Fear & Greed Index - Secondary right y-axis (y2) with range 0-100
-    sentiment_col = "sentiment score" if "sentiment score" in merged_df.columns else None
-    if sentiment_col and not merged_df[sentiment_col].isna().all():
-        # Identify non-NaN segments
-        valid_indices = merged_df.index[merged_df[sentiment_col].notna()]
-        segment_count = 1
-        if len(valid_indices) > 0:
-            start_idx = valid_indices[0]
-            for i in range(1, len(valid_indices)):
-                if valid_indices[i] != valid_indices[i-1] + pd.Timedelta(days=1):  # Detect gap
-                    end_idx = valid_indices[i-1]
-                    segment_df = merged_df.loc[start_idx:end_idx].copy()
-                    if not segment_df.empty:
-                        debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
-                        debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
-                        fig.add_trace(go.Scatter(
-                            x=segment_df.index,
-                            y=segment_df[sentiment_col],
-                            mode="lines+markers",
-                            name=f"Fear & Greed Index Segment {segment_count}",
-                            line=dict(color="red", width=1.5),
-                            marker=dict(size=5),
-                            showlegend=True
-                        ), row=1, col=1, secondary_y=True)  # Use secondary y-axis for Fear & Greed Index
-                        segment_count += 1
-                    start_idx = valid_indices[i]
-            # Handle the last segment
-            end_idx = valid_indices[-1]
-            segment_df = merged_df.loc[start_idx:end_idx].copy()
-            if not segment_df.empty:
-                debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
-                debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
-                fig.add_trace(go.Scatter(
-                    x=segment_df.index,
-                    y=segment_df[sentiment_col],
-                    mode="lines+markers",
-                    name=f"Fear & Greed Index Segment {segment_count}",
-                    line=dict(color="red", width=1.5),
-                    marker=dict(size=5),
-                    showlegend=True
-                ), row=1, col=1, secondary_y=True)  # Use secondary y-axis for Fear & Greed Index
-        else:
-            debug_outputs.append(("Warning", "No valid (non-NaN) Fear & Greed Index data available to plot."))
-
-    # Volume - Row 2, on primary y-axis for the second subplot
-    if "Volume" in merged_df.columns and not merged_df["Volume"].isna().all():
-        fig.add_trace(go.Bar(
-            x=merged_df.index,
-            y=merged_df["Volume"],
-            name="Volume",
-            marker=dict(color="#4B0082", opacity=1.0),
-            showlegend=True
-        ), row=2, col=1)
-
-    # Update layout with multiple y-axes
-    fig.update_layout(
-        title={
-            "text": f"{market_name} Price History with MA, Fear & Greed, and Volume",
-            "y": 0.98,
-            "x": 0.5,
-            "xanchor": "center",
-            "yanchor": "top",
-            "font": {"size": 24}
-        },
-        height=1000,
-        legend=dict(
-            x=0.5,
-            y=-0.3,  # Adjusted to position legend below the Volume subplot's date axis
-            xanchor="center",
-            yanchor="top",
-            orientation="h",
-            font={"size": 16},
-            bgcolor="rgba(255, 255, 255, 0.8)",
-            bordercolor="Black",
-            borderwidth=1,
-            groupclick="toggleitem"
-        ),
-        hovermode="x unified",
-        clickmode="event+select",
-        margin=dict(l=80, r=80, t=150, b=150),
-        template="plotly_white"
-    )
-
-    # Update axes
-    # Primary left y-axis for Price and MA (y)
-    fig.update_yaxes(
-        title_text=f"{market_name} Price (USD)",
-        title_font={"size": 16},
-        tickfont={"size": 14},
-        showgrid=False,
-        side="left",
-        row=1,
-        col=1,
-        autorange=True
-    )
-
-    # Secondary right y-axis for Fear & Greed Index (y2)
-    fig.update_yaxes(
-        title_text="Fear & Greed Index",
-        title_font={"size": 16},
-        tickfont={"size": 14},
-        range=[0, 100],
-        showgrid=False,
-        side="right",
-        row=1,
-        col=1,
-        secondary_y=True
-    )
-
-    # Primary y-axis for Volume (second subplot)
-    fig.update_yaxes(
-        title_text="Volume",
-        title_font={"size": 16},
-        tickfont={"size": 14},
-        showgrid=False,
-        side="left",
-        row=2,
-        col=1,
-        autorange=True
-    )
-
-    # X-axis for Date
-    fig.update_xaxes(
-        title_text="Date",
-        title_font={"size": 16},
-        tickfont={"size": 14},
-        row=2,
-        col=1
-    )
-
-    debug_outputs.append(("Debug: Plotly Traces", [trace.name for trace in fig.data]))
-
-    return fig, debug_outputs
-
-# --- Main Application ---
-
+# Main application
 def main():
-    # Initialize session state for button control
-    if 'show_api_debug' not in st.session_state:
-        st.session_state.show_api_debug = False
+    # Load data
+    historical_datasets, _ = load_historical_data_api()
+    prediction_datasets, _ = load_prediction_data_api()
 
-    # Sidebar
-    st.sidebar.title("Market Selection")
-    market = st.sidebar.selectbox("Choose Market", ["Bitcoin (BTC)", "Nasdaq"])
-
-    # Load data from both APIs
-    historical_datasets, historical_columns = load_historical_data_api()
-    prediction_datasets, prediction_columns = load_prediction_data_api()
-
-    # Handle errors
-    if historical_datasets is None:
-        st.error("Error loading historical data from API.")
-        return
-    if prediction_datasets is None:
-        st.error("Error loading prediction data from API.")
+    if historical_datasets is None or prediction_datasets is None:
+        st.error("Failed to load data from APIs.")
         return
 
-    all_datasets = {**historical_datasets, **prediction_datasets}
+    # Extract specific datasets
+    btc_price_historical = historical_datasets.get("BTC Price (Daily)")
+    btc_fear_greed_historical = historical_datasets.get("Fear & Greed Index (BTC)")
+    nasdaq_price_historical = historical_datasets.get("Nasdaq Price (Daily)")
+    nasdaq_fear_greed_historical = historical_datasets.get("Fear & Greed Index (Nasdaq)")
+    btc_prediction = prediction_datasets.get("BTC Predictions")
+    nasdaq_prediction = prediction_datasets.get("Nasdaq Predictions")
 
-    if not all_datasets:
-        st.error("No data loaded from either API.")
-        return
+    # Title
+    st.title('Historical overview')
 
-    # Move description to the top
-    if market == "Bitcoin (BTC)":
-        st.title("Crypto Market Data Visualization")
-        st.markdown(
-            """
-            **Chart Overview:**
-            - **Blue Line**: {market} Price (Close) in USD.
-            - **Orange Line**: {ma_window}-Day Moving Average (MA) of the price.
-            - **Red Line**: Fear & Greed Index (0-100), showing market sentiment.
-            - **Purple Bars**: Trading Volume (in a separate chart below).
-            Use the legend to toggle traces on/off for better focus.
-            """.format(market=market, ma_window=20)  # Default ma_window for display
-        )
-        st.write("")  # Add spacing
-    elif market == "Nasdaq":
-        st.title("Nasdaq Market Data Visualization")
-        st.markdown(
-            """
-            **Chart Overview:**
-            - **Blue Line**: {market} Price (Close) in USD.
-            - **Orange Line**: {ma_window}-Day Moving Average (MA) of the price.
-            - **Red Line**: Fear & Greed Index (0-100), showing market sentiment.
-            - **Purple Bars**: Trading Volume (in a separate chart below).
-            Use the legend to toggle traces on/off for better focus.
-            """.format(market=market, ma_window=20)  # Default ma_window for display
-        )
-        st.write("")  # Add spacing
+    # Columns for historical data
+    col1, col2, col3, col4 = st.columns(4)
 
-    # Display chart and selection methods
-    # Dataset selection and sliders
-    st.sidebar.subheader("Chart Options")
-    if market == "Bitcoin (BTC)":
-        price_options = [k for k in all_datasets.keys() if "BTC" in k and "Fear" not in k]
-        fear_options = [k for k in all_datasets.keys() if "Fear & Greed Index (BTC)" in k]
-    elif market == "Nasdaq":
-        price_options = [k for k in all_datasets.keys() if "Nasdaq" in k and "Fear" not in k]
-        fear_options = [k for k in all_datasets.keys() if "Fear & Greed Index (Nasdaq)" in k]
+    with col1:
+        st.write("<h4 style='margin-bottom: 0px;'>Bitcoin Historical Data</h4>", unsafe_allow_html=True)
+        with st.container(border=True, height=600):
+            if btc_price_historical is not None:
+                # Simplify to single line chart with only "Close" prices
+                st.line_chart(btc_price_historical[["Close"]], use_container_width=True)
+            else:
+                st.error("Bitcoin historical data not available.")
 
-    selected_price_dataset = st.sidebar.selectbox("Select Price Dataset", price_options)
-    selected_fear_dataset = st.sidebar.selectbox("Select Fear & Greed Dataset", fear_options, disabled=len(fear_options) == 0)
-    ma_window = st.sidebar.slider("Moving Average Window (days)", 5, 50, 20)
-    time_frame = st.sidebar.slider("Time Frame (Years)", 2015, 2025, (2015, 2025), step=1)
+    with col2:
+        st.write("<h4 style='margin-bottom: 0px;'>Bitcoin Historical Fear and Greed Index</h4>", unsafe_allow_html=True)
+        with st.container(border=True, height=600):
+            if btc_fear_greed_historical is not None:
+                # Simplify to single line chart with "sentiment score"
+                st.line_chart(btc_fear_greed_historical[["sentiment score"]], use_container_width=True)
+            else:
+                st.error("Bitcoin fear and greed data not available.")
 
-    price_df = all_datasets.get(selected_price_dataset)
-    fear_df = all_datasets.get(selected_fear_dataset) if selected_fear_dataset else pd.DataFrame()
+    with col3:
+        st.write("<h4 style='margin-bottom: 0px;'>Nasdaq Historical Data</h4>", unsafe_allow_html=True)
+        with st.container(border=True, height=600):
+            if nasdaq_price_historical is not None:
+                # Simplify to single line chart with only "Close" prices
+                st.line_chart(nasdaq_price_historical[["Close"]], use_container_width=True)
+            else:
+                st.error("Nasdaq historical data not available.")
 
-    if price_df is None:
-        st.error(f"No data available for {selected_price_dataset}.")
-        return
+    with col4:
+        st.write("<h4 style='margin-bottom: 0px;'>Nasdaq Historical Fear and Greed Index</h4>", unsafe_allow_html=True)
+        with st.container(border=True, height=600):
+            if nasdaq_fear_greed_historical is not None:
+                # Simplify to single line chart with "sentiment score"
+                st.line_chart(nasdaq_fear_greed_historical[["sentiment score"]], use_container_width=True)
+            else:
+                st.error("Nasdaq fear and greed data not available.")
 
-    # Filter data based on selected time frame
-    start_year, end_year = time_frame
-    if price_df is not None and not price_df.empty:
-        price_df = price_df[(price_df.index.year >= start_year) & (price_df.index.year <= end_year)]
-    if fear_df is not None and not fear_df.empty:
-        fear_df = fear_df[(fear_df.index.year >= start_year) & (fear_df.index.year <= end_year)]
+    # Overlapping charts section
+    st.subheader('Overlapping charts', divider=True)
+    with st.container(border=True, height=700):
+        if btc_price_historical is not None and nasdaq_price_historical is not None:
+            # Normalize data for overlapping chart
+            try:
+                first_btc_close = btc_price_historical["Close"].dropna().iloc[0]
+                first_nasdaq_close = nasdaq_price_historical["Close"].dropna().iloc[0]
+            except IndexError:
+                st.error("Insufficient data for normalization.")
+            else:
+                combined_index = pd.Index.union(btc_price_historical.index, nasdaq_price_historical.index)
+                btc_price_df = btc_price_historical.reindex(combined_index)
+                nasdaq_price_df = nasdaq_price_historical.reindex(combined_index)
+                btc_normalized = (btc_price_df["Close"] / first_btc_close) * 100
+                nasdaq_normalized = (nasdaq_price_df["Close"] / first_nasdaq_close) * 100
+                # Create a DataFrame with two columns for overlapping display
+                overlap_df = pd.DataFrame({
+                    "BTC Price (% change from start)": btc_normalized,
+                    "NASDAQ Price (% change from start)": nasdaq_normalized
+                })
+                st.line_chart(overlap_df, use_container_width=True)
+        else:
+            st.error("Data for overlapping charts not available.")
+    st.slider(label='days', min_value=1, max_value=365, step=1)
 
-    # Plot chart with filtered data and capture debug outputs
-    fig, debug_outputs = plot_market_chart(price_df, fear_df, market, ma_window)
-    st.plotly_chart(fig, use_container_width=True)
+    # Predictions section
+    st.title('Our Predictions')
 
-    # Show raw data
-    if st.sidebar.checkbox("Show Raw Data"):
-        if market == "Bitcoin (BTC)":
-            st.subheader(f"Price Data - {selected_price_dataset}")
-            st.dataframe(price_df.style.set_table_styles(
-                [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
-                 {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
-            ))
-            if not fear_df.empty:
-                st.subheader(f"Fear & Greed Data - {selected_fear_dataset}")
-                st.dataframe(fear_df.style.set_table_styles(
-                    [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
-                     {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
-                ))
-        elif market == "Nasdaq":
-            st.subheader(f"Price Data - {selected_price_dataset}")
-            st.dataframe(price_df.style.set_table_styles(
-                [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
-                 {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
-            ))
-            if not fear_df.empty:
-                st.subheader(f"Fear & Greed Data - {selected_fear_dataset}")
-                st.dataframe(fear_df.style.set_table_styles(
-                    [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
-                     {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
-                ))
-        st.write("")  # Add spacing
+    col1, col2 = st.columns(2)
 
-    # Show API and debug info behind a button at the bottom
-    if st.sidebar.button("Show API & Debug Info"):
-        st.session_state.show_api_debug = not st.session_state.show_api_debug
+    with col1:
+        st.write("Bitcoin Prediction")
+        with st.container(border=True, height=800):
+            if btc_prediction is not None:
+                # Simplify to single line chart with "Close" prices
+                st.line_chart(btc_prediction[["Close"]], use_container_width=True)
+            else:
+                st.error("Bitcoin prediction data not available.")
+        st.slider(label='days', min_value=1, max_value=30, step=1)
 
-    if st.session_state.show_api_debug:
-        with st.expander("API & Debug Info", expanded=True):
-            st.write("**Historical API returned columns:**")
-            st.write(historical_columns)
-            st.write("**Prediction API returned columns:**")
-            st.write(prediction_columns)
-            st.write("**Available Historical Datasets:**")
-            st.write(list(historical_datasets.keys()))
-            st.write("**Available Prediction Datasets:**")
-            st.write(list(prediction_datasets.keys()))
-            # Display debug outputs from plot_market_chart
-            for label, output in debug_outputs:
-                st.write(f"**{label}**")
-                st.write(output)
+    with col2:
+        st.write("Stock Market Prediction")
+        with st.container(border=True, height=800):
+            if nasdaq_prediction is not None:
+                # Simplify to single line chart with "Close" prices
+                st.line_chart(nasdaq_prediction[["Close"]], use_container_width=True)
+            else:
+                st.error("Nasdaq prediction data not available.")
+        st.slider(label='Days', min_value=1, max_value=30, step=1)
+
+    # Accuracy section
+    st.subheader('The accuracy of our model', divider=True)
+    with st.container(border=True, height=800):
+        # Placeholder for accuracy chart (already simple)
+        st.line_chart(np.random.randn(50, 3), use_container_width=True)
+    st.slider(label='', min_value=1, max_value=10, step=1)
 
 if __name__ == "__main__":
     main()

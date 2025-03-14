@@ -16,7 +16,7 @@ st.set_page_config(layout='wide')
 
 st.title('Historical overview')
 
-st.logo(logo_large, size='large')
+#st.logo(logo_large, size='large')
 
 col1, col2, col3, col4 = st.columns(4)
 
