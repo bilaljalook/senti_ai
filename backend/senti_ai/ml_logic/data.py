@@ -51,7 +51,7 @@ def save_data_to_bq(
     print(f"✅ Data saved to bigquery, with shape {data.shape}")
     pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
     for key in pushover_user_keys:
-        send_pushover_notification('Data saved to bigquery, with shape {data.shape}', user_key=key)
+        send_pushover_notification(f'Data saved to bigquery, with shape {data.shape}', user_key=key)
 
 def load_data_from_bq(
         gcp_project:str,
@@ -68,10 +68,12 @@ def load_data_from_bq(
 
     return df
 
-
 def combine_all_data_and_save():
+    pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
+
     df_small = fetch_daily_data()
 
+    print(f"✅ df_small: {df_small}")
     if df_small is None:
         print(f"❌ Combine failed because daily fetch did not return a correct dataframe.")
         return None
@@ -94,7 +96,6 @@ def combine_all_data_and_save():
     print(df_combined[['BTC_Volatility','date']])
     #print(f"✅ {df_combined.head(5)}")
 
-    pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
     has_nan = df_combined.isna().any()
 
     if (df_combined.shape[1] == 17) & (not has_nan.any()):
@@ -104,14 +105,13 @@ def combine_all_data_and_save():
         print(df_combined.head(5))
         print(df_combined.info())
         print(f"✅ {df_combined.head(5)}")
-        #save_data_to_bq(df_combined,GCP_PROJECT_AHMET,BQ_DATASET,"raw", truncate=True)
+        save_data_to_bq(df_combined,GCP_PROJECT_AHMET,BQ_DATASET,"raw", truncate=True)
 
     else:
         for key in pushover_user_keys:
-            send_pushover_notification('Daily and hist data combine and save failed', user_key=key)
+            send_pushover_notification('Daily and hist data combination and save failed.', user_key=key)
 
     return None
-
 
 def fetch_daily_data():
     print(f"✅ Fetch started")
@@ -166,42 +166,41 @@ def fetch_daily_data():
 
     #### Construct final dataframe START
 
-    df_result = pd.DataFrame({
-        "date": datetime.today().date(),
-        "BTC_Close":df_today['Close']['BTC-USD'],
-        "BTC_High":df_today['High']['BTC-USD'],
-        "BTC_Low":df_today['Low']['BTC-USD'],
-        "BTC_Open":df_today['Open']['BTC-USD'],
-        "BTC_Volume":df_today['Volume']['BTC-USD'],
-        "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
-        "NASDAQ_Close":df_today['Close']['^IXIC'],
-        "NASDAQ_High":df_today['High']['^IXIC'],
-        "NASDAQ_Low":df_today['Low']['^IXIC'],
-        "NASDAQ_Open":df_today['Open']['^IXIC'],
-        "NASDAQ_Volume":df_today['Volume']['^IXIC'],
-        "NASDAQ_sentiment_score":stock_fear_greed_df,
-        }, index=[0])
-
-    print(f"✅ Putting together mock df_result")
-
     # df_result = pd.DataFrame({
     #     "date": datetime.today().date(),
-    #     "BTC_Close":81461.62,
-    #     "BTC_High":81961.26,
-    #     "BTC_Low":76808.10,
-    #     "BTC_Open":78582.16,
-    #     "BTC_Volume":58110119936,
-    #     "BTC_sentiment_score":24,
-    #     "NASDAQ_Close":17436.10,
-    #     "NASDAQ_High":17687.40,
-    #     "NASDAQ_Low":17238.24,
-    #     "NASDAQ_Open":17443.09,
-    #     "NASDAQ_Volume":9177320000,
-    #     "NASDAQ_sentiment_score":13,
+    #     "BTC_Close":df_today['Close']['BTC-USD'],
+    #     "BTC_High":df_today['High']['BTC-USD'],
+    #     "BTC_Low":df_today['Low']['BTC-USD'],
+    #     "BTC_Open":df_today['Open']['BTC-USD'],
+    #     "BTC_Volume":df_today['Volume']['BTC-USD'],
+    #     "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
+    #     "NASDAQ_Close":df_today['Close']['^IXIC'],
+    #     "NASDAQ_High":df_today['High']['^IXIC'],
+    #     "NASDAQ_Low":df_today['Low']['^IXIC'],
+    #     "NASDAQ_Open":df_today['Open']['^IXIC'],
+    #     "NASDAQ_Volume":df_today['Volume']['^IXIC'],
+    #     "NASDAQ_sentiment_score":stock_fear_greed_df,
     #     }, index=[0])
 
-    print(df_result)
-    print(f"✅ Collected data shape: {df_result.shape}")
+    print(f"✅ Putting together mock df_result")
+    df_result = pd.DataFrame({
+        "date": datetime.today().date(),
+        "BTC_Close":81461.62,
+        "BTC_High":81961.26,
+        "BTC_Low":76808.10,
+        "BTC_Open":78582.16,
+        "BTC_Volume":58110119936,
+        "BTC_sentiment_score":24,
+        "NASDAQ_Close":17436.10,
+        "NASDAQ_High":17687.40,
+        "NASDAQ_Low":17238.24,
+        "NASDAQ_Open":17443.09,
+        "NASDAQ_Volume":9177320000,
+        "NASDAQ_sentiment_score":13,
+        }, index=[0])
+
+    print(f"✅ df_result.shape[0] should be 1: {df_result.shape[0]}")
+    print(f"✅ df_result.shape[1] should be 13: {df_result.shape[1]}")
 
     pushover_user_keys = [AHMET_USER_KEY, KSENIA_USER_KEY, BILL_USER_KEY, PHILIP_USER_KEY]
 
