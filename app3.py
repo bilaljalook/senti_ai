@@ -4,14 +4,10 @@ import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime
-import numpy as np
-
-# Set page configuration without the theme parameter (to avoid TypeError)
-st.set_page_config(page_title="Senti_Ai", layout="wide")
 
 # Add custom CSS for spacing, styling, and slider thumb color
 st.markdown(
-    """
+"""
     <style>
     .block-container {
         padding: 2rem;
@@ -23,65 +19,162 @@ st.markdown(
     .stSelectbox, .stSlider, .stCheckbox {
         margin-bottom: 1.5rem;
     }
+    /* Custom slider thumb styling for all browsers */
+    .stSlider [type="range"]::-webkit-slider-thumb {
+        background: red !important;
+        -webkit-appearance: none; /* Ensure WebKit respects the style */
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .stSlider [type="range"]::-moz-range-thumb {
+        background: red !important;
+        -moz-appearance: none; /* Ensure Mozilla respects the style */
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .stSlider [type="range"]::-ms-thumb {
+        background: red !important;
+        appearance: none; /* Ensure MS Edge/IE respects the style */
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    /* Optional: Style the track if desired (keeping it as default for now) */
+    .stSlider [type="range"]::-webkit-slider-runnable-track {
+        background: #ddd; /* Light gray track for contrast */
+    }
+    .stSlider [type="range"]::-moz-range-track {
+        background: #ddd; /* Light gray track for contrast */
+    }
+    .stSlider [type="range"]::-ms-track {
+        background: #ddd; /* Light gray track for contrast */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    <style>
++   /* 1. Override Streamlit's default accent (often purple) to red */
++   :root {
++       --primary-color: red !important;
++   }
 
-    /* Custom slider thumb styling for all browsers with specific sidebar targeting */
-    .stSideBar .stSlider [type="range"]::-webkit-slider-thumb {
+    .block-container {
+        padding: 2rem;
+        max-width: 1200px;
+        /* your other styles... */
+    }
+    .element-container, .stMarkdown, .stDataFrame {
+        margin-bottom: 2rem;
+    }
+    .stSelectbox, .stSlider, .stCheckbox {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Custom slider thumb styling for all browsers */
+    .stSlider [type="range"]::-webkit-slider-thumb {
         background: red !important;
         -webkit-appearance: none;
         width: 16px;
         height: 16px;
         border-radius: 50%;
         cursor: pointer;
-        border: none !important;
-        box-shadow: none !important;
     }
-    .stSideBar .stSlider [type="range"]::-moz-range-thumb {
+    .stSlider [type="range"]::-moz-range-thumb {
         background: red !important;
         -moz-appearance: none;
         width: 16px;
         height: 16px;
         border-radius: 50%;
         cursor: pointer;
-        border: none !important;
-        box-shadow: none !important;
     }
-    .stSideBar .stSlider [type="range"]::-ms-thumb {
+    .stSlider [type="range"]::-ms-thumb {
         background: red !important;
         appearance: none;
         width: 16px;
         height: 16px;
         border-radius: 50%;
         cursor: pointer;
-        border: none !important;
-        box-shadow: none !important;
     }
-
-    /* Optional: Style the unselected portion of the track */
-    .stSideBar .stSlider [type="range"]::-webkit-slider-runnable-track {
+    /* Optional: Style the track if desired (keeping it as default for now) */
+    .stSlider [type="range"]::-webkit-slider-runnable-track {
         background: #ddd;
     }
-    .stSideBar .stSlider [type="range"]::-moz-range-track {
+    .stSlider [type="range"]::-moz-range-track {
         background: #ddd;
     }
-    .stSideBar .stSlider [type="range"]::-ms-track {
+    .stSlider [type="range"]::-ms-track {
         background: #ddd;
-    }
-
-    /* Pure CSS hack to override the "filled" portion of the slider in Streamlit */
-    .stSideBar [data-testid="stSlider"] > div [data-baseweb="slider"] > div:nth-child(2) {
-        background-color: red !important;
-    }
-
-    /* Enforce label color to black */
-    .stSideBar .stSlider label {
-        color: black !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
-
 # --- API-based Data Loading Functions ---
+
+    """
+    <style>
++   /* 1. Override Streamlit's default accent (often purple) to red */
++   :root {
++       --primary-color: red !important;
++   }
+    .block-container {
+        padding: 2rem;
+        max-width: 1200px;
+        /* your other styles... */
+    }
+    .element-container, .stMarkdown, .stDataFrame {
+        margin-bottom: 2rem;
+    }
+    .stSelectbox, .stSlider, .stCheckbox {
+        margin-bottom: 1.5rem;
+    }
+    /* Custom slider thumb styling for all browsers */
+    .stSlider [type="range"]::-webkit-slider-thumb {
+        background: red !important;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .stSlider [type="range"]::-moz-range-thumb {
+        background: red !important;
+        -moz-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .stSlider [type="range"]::-ms-thumb {
+        background: red !important;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    /* Optional: Style the track if desired (keeping it as default for now) */
+    .stSlider [type="range"]::-webkit-slider-runnable-track {
+        background: #ddd;
+    }
+    .stSlider [type="range"]::-moz-range-track {
+        background: #ddd;
+    }
+    .stSlider [type="range"]::-ms-track {
+        background: #ddd;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 def load_historical_data_api():
     url = "http://web.senti-ai.net:5367/get_historical?gcp_project=supple-folder-448412-n9&bq_dataset=sentiai&table=raw"
     try:
@@ -167,54 +260,44 @@ def load_prediction_data_api():
     df = pd.DataFrame(data)
     columns = df.columns.tolist()  # Capture columns to return
 
-    # Process BTC Predictions
-    btc_df = df.copy()
-    btc_df["Date"] = pd.to_datetime(btc_df["date"], errors="coerce")
-    btc_df = btc_df.drop(columns=["date"], errors="ignore").rename(columns={"close": "Close"}).set_index("Date")
-    if not btc_df.empty:
-        datasets["BTC Predictions"] = btc_df
+    df["Date"] = pd.to_datetime(df["date"], errors="coerce")
+    df = df.rename(columns={"close": "Close"}).drop(columns=["date"])
+    df = df.dropna(subset=["Date"]).drop_duplicates(subset=["Date"]).set_index("Date")
 
-    # Generate Nasdaq Predictions by scaling BTC's prediction data
-    if not btc_df.empty:
-        nasdaq_current_price = 20000  # Set first predicted close to 20,000 as per user
-        first_date = btc_df.index[0]
-        btc_first_close = btc_df.loc[first_date, "Close"]
-        ratios = btc_df["Close"] / btc_first_close  # Get relative changes from first predicted close
-        nasdaq_pred_df = pd.DataFrame({"Close": nasdaq_current_price * ratios}, index=btc_df.index)
-        datasets["Nasdaq Predictions"] = nasdaq_pred_df
+    if not df.empty:
+        datasets["BTC Predictions"] = df  # Assuming BTC predictions
 
     return datasets, columns
 
-# Helper function to get corresponding historical dataset for a prediction dataset
-def get_corresponding_historical_dataset(prediction_dataset):
-    if prediction_dataset == "BTC Predictions":
-        return "BTC Price (Daily)"
-    elif prediction_dataset == "Nasdaq Predictions":
-        return "Nasdaq Price (Daily)"
-    else:
-        return None
-
 # --- Plotting Function ---
+
 def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
+    # Initialize a list to collect debug outputs
     debug_outputs = []
 
+    # Validate and prepare data
     if "Close" not in price_df.columns or price_df["Close"].isna().all():
         debug_outputs.append(("Error", "No valid price data available for plotting. Check the raw data."))
         debug_outputs.append(("Price Data", price_df))
         return go.Figure(), debug_outputs
 
+    # Calculate Moving Average
     ma = price_df["Close"].rolling(window=ma_window, min_periods=1).mean()
 
+    # Debug: Show raw Fear & Greed data before merging
     if fear_df is not None and not fear_df.empty and "sentiment score" in fear_df.columns:
         debug_outputs.append(("Debug: Raw Fear & Greed Data Sample (Before Merge)", fear_df.head(10)))
         debug_outputs.append(("Debug: Fear & Greed Data Statistics", fear_df["sentiment score"].describe()))
 
+    # Merge datasets for aligned dates using a left join to preserve price data
     merged_df = price_df.join(fear_df, how="left").sort_index()
 
+    # Debug: Print merged data to verify
     debug_outputs.append(("Debug: Merged Data Sample", merged_df.head(10)))
     if "sentiment score" in merged_df.columns:
         debug_outputs.append(("Debug: Sentiment Data Statistics (After Merge)", merged_df["sentiment score"].describe()))
 
+    # Create subplots: one for main chart (Price, MA, Fear & Greed), one for Volume
     fig = make_subplots(
         rows=2,
         cols=1,
@@ -222,9 +305,11 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         vertical_spacing=0.1,
         row_heights=[0.7, 0.3],
         subplot_titles=["Price, MA, and Fear & Greed Index", "Volume"],
-        specs=[[{"secondary_y": True}], [{}]]
+        specs=[[{"secondary_y": True}], [{}]]  # Enable secondary y-axis for the first row
     )
 
+    # Main chart (Price, MA, Fear & Greed) - Row 1
+    # Price (Close) - Added first with increased visibility, on primary left y-axis (y)
     fig.add_trace(go.Scatter(
         x=merged_df.index,
         y=merged_df["Close"],
@@ -234,6 +319,7 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         showlegend=True
     ), row=1, col=1)
 
+    # Moving Average - Added after price, on primary left y-axis (y)
     fig.add_trace(go.Scatter(
         x=merged_df.index,
         y=ma,
@@ -243,18 +329,51 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         showlegend=True
     ), row=1, col=1)
 
-    if "sentiment score" in merged_df.columns:
-        fear_greed_trace = go.Scatter(
-            x=merged_df.index,
-            y=merged_df["sentiment score"],
-            mode="lines+markers",
-            name="Fear & Greed Index",
-            line=dict(color="red", width=1.5),
-            marker=dict(size=5),
-            showlegend=True
-        )
-        fig.add_trace(fear_greed_trace, row=1, col=1, secondary_y=True)
+    # Fear & Greed Index - Secondary right y-axis (y2) with range 0-100
+    sentiment_col = "sentiment score" if "sentiment score" in merged_df.columns else None
+    if sentiment_col and not merged_df[sentiment_col].isna().all():
+        # Identify non-NaN segments
+        valid_indices = merged_df.index[merged_df[sentiment_col].notna()]
+        segment_count = 1
+        if len(valid_indices) > 0:
+            start_idx = valid_indices[0]
+            for i in range(1, len(valid_indices)):
+                if valid_indices[i] != valid_indices[i-1] + pd.Timedelta(days=1):  # Detect gap
+                    end_idx = valid_indices[i-1]
+                    segment_df = merged_df.loc[start_idx:end_idx].copy()
+                    if not segment_df.empty:
+                        debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
+                        debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
+                        fig.add_trace(go.Scatter(
+                            x=segment_df.index,
+                            y=segment_df[sentiment_col],
+                            mode="lines+markers",
+                            name=f"Fear & Greed Index Segment {segment_count}",
+                            line=dict(color="red", width=1.5),
+                            marker=dict(size=5),
+                            showlegend=True
+                        ), row=1, col=1, secondary_y=True)  # Use secondary y-axis for Fear & Greed Index
+                        segment_count += 1
+                    start_idx = valid_indices[i]
+            # Handle the last segment
+            end_idx = valid_indices[-1]
+            segment_df = merged_df.loc[start_idx:end_idx].copy()
+            if not segment_df.empty:
+                debug_outputs.append((f"Debug: Segment {segment_count} from {start_idx} to {end_idx}", segment_df[[sentiment_col]]))
+                debug_outputs.append((f"Debug: Segment {segment_count} Statistics from {start_idx} to {end_idx}", segment_df[sentiment_col].describe()))
+                fig.add_trace(go.Scatter(
+                    x=segment_df.index,
+                    y=segment_df[sentiment_col],
+                    mode="lines+markers",
+                    name=f"Fear & Greed Index Segment {segment_count}",
+                    line=dict(color="red", width=1.5),
+                    marker=dict(size=5),
+                    showlegend=True
+                ), row=1, col=1, secondary_y=True)  # Use secondary y-axis for Fear & Greed Index
+        else:
+            debug_outputs.append(("Warning", "No valid (non-NaN) Fear & Greed Index data available to plot."))
 
+    # Volume - Row 2, on primary y-axis for the second subplot
     if "Volume" in merged_df.columns and not merged_df["Volume"].isna().all():
         fig.add_trace(go.Bar(
             x=merged_df.index,
@@ -264,6 +383,7 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
             showlegend=True
         ), row=2, col=1)
 
+    # Update layout with multiple y-axes and consistent background
     fig.update_layout(
         title={
             "text": f"{market_name} Price History with MA, Fear & Greed, and Volume",
@@ -276,7 +396,7 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         height=1000,
         legend=dict(
             x=0.5,
-            y=-0.3,
+            y=-0.3,  # Adjusted to position legend below the Volume subplot's date axis
             xanchor="center",
             yanchor="top",
             orientation="h",
@@ -290,10 +410,12 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         clickmode="event+select",
         margin=dict(l=80, r=80, t=150, b=150),
         template="plotly_white",
-        paper_bgcolor="white",
-        plot_bgcolor="white"
+        paper_bgcolor="white",  # Ensure overall background is white
+        plot_bgcolor="white"    # Ensure plot area background is white
     )
 
+    # Update axes
+    # Primary left y-axis for Price and MA (y)
     fig.update_yaxes(
         title_text=f"{market_name} Price (USD)",
         title_font={"size": 16},
@@ -304,6 +426,8 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         col=1,
         autorange=True
     )
+
+    # Secondary right y-axis for Fear & Greed Index (y2)
     fig.update_yaxes(
         title_text="Fear & Greed Index",
         title_font={"size": 16},
@@ -315,6 +439,8 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         col=1,
         secondary_y=True
     )
+
+    # Primary y-axis for Volume (second subplot)
     fig.update_yaxes(
         title_text="Volume",
         title_font={"size": 16},
@@ -325,6 +451,8 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
         col=1,
         autorange=True
     )
+
+    # X-axis for Date
     fig.update_xaxes(
         title_text="Date",
         title_font={"size": 16},
@@ -338,16 +466,21 @@ def plot_market_chart(price_df, fear_df, market_name, ma_window=20):
     return fig, debug_outputs
 
 # --- Main Application ---
+
 def main():
+    # Initialize session state for button control
     if 'show_api_debug' not in st.session_state:
         st.session_state.show_api_debug = False
 
+    # Sidebar
     st.sidebar.title("Market Selection")
     market = st.sidebar.selectbox("Choose Market", ["Bitcoin (BTC)", "Nasdaq"])
 
+    # Load data from both APIs
     historical_datasets, historical_columns = load_historical_data_api()
     prediction_datasets, prediction_columns = load_prediction_data_api()
 
+    # Handle errors
     if historical_datasets is None:
         st.error("Error loading historical data from API.")
         return
@@ -361,99 +494,96 @@ def main():
         st.error("No data loaded from either API.")
         return
 
+    # Move description to the top
     if market == "Bitcoin (BTC)":
         st.title("Crypto Market Data Visualization")
         st.markdown(
             """
             **Chart Overview:**
             - **Blue Line**: {market} Price (Close) in USD.
-            - **Orange Line**: {ma_window}-Day Moving Average (MA).
-            - **Red Line**: Fear & Greed Index (0-100).
-            - **Purple Bars**: Trading Volume.
-            """.format(market=market, ma_window=20)
+            - **Orange Line**: {ma_window}-Day Moving Average (MA) of the price.
+            - **Red Line**: Fear & Greed Index (0-100), showing market sentiment.
+            - **Purple Bars**: Trading Volume (in a separate chart below).
+            Use the legend to toggle traces on/off for better focus.
+            """.format(market=market, ma_window=20)  # Default ma_window for display
         )
-        st.write("")
+        st.write("")  # Add spacing
     elif market == "Nasdaq":
         st.title("Nasdaq Market Data Visualization")
         st.markdown(
             """
             **Chart Overview:**
             - **Blue Line**: {market} Price (Close) in USD.
-            - **Orange Line**: {ma_window}-Day Moving Average (MA).
-            - **Red Line**: Fear & Greed Index (0-100).
-            - **Purple Bars**: Trading Volume.
-            """.format(market=market, ma_window=20)
+            - **Orange Line**: {ma_window}-Day Moving Average (MA) of the price.
+            - **Red Line**: Fear & Greed Index (0-100), showing market sentiment.
+            - **Purple Bars**: Trading Volume (in a separate chart below).
+            Use the legend to toggle traces on/off for better focus.
+            """.format(market=market, ma_window=20)  # Default ma_window for display
         )
-        st.write("")
+        st.write("")  # Add spacing
 
+    # Display chart and selection methods
+    # Dataset selection and sliders
     st.sidebar.subheader("Chart Options")
     if market == "Bitcoin (BTC)":
         price_options = [k for k in all_datasets.keys() if "BTC" in k and "Fear" not in k]
         fear_options = [k for k in all_datasets.keys() if "Fear & Greed Index (BTC)" in k]
-    else:
+    elif market == "Nasdaq":
         price_options = [k for k in all_datasets.keys() if "Nasdaq" in k and "Fear" not in k]
         fear_options = [k for k in all_datasets.keys() if "Fear & Greed Index (Nasdaq)" in k]
 
     selected_price_dataset = st.sidebar.selectbox("Select Price Dataset", price_options)
-    selected_fear_dataset = st.sidebar.selectbox(
-        "Select Fear & Greed Dataset",
-        fear_options,
-        disabled=len(fear_options) == 0
-    )
+    selected_fear_dataset = st.sidebar.selectbox("Select Fear & Greed Dataset", fear_options, disabled=len(fear_options) == 0)
     ma_window = st.sidebar.slider("Moving Average Window (days)", 5, 50, 20)
     time_frame = st.sidebar.slider("Time Frame (Years)", 2015, 2025, (2015, 2025), step=1)
 
     price_df = all_datasets.get(selected_price_dataset)
-
-    # Handle prediction data by merging with historical data for volume
-    if "Predictions" in selected_price_dataset:
-        historical_dataset_name = get_corresponding_historical_dataset(selected_price_dataset)
-        historical_price_df = all_datasets.get(historical_dataset_name)
-        if historical_price_df is not None:
-            # Calculate average volume from historical data
-            avg_volume = historical_price_df["Volume"].mean()
-            # Get prediction data
-            prediction_df = price_df
-            # Add Volume column to prediction_df with avg_volume
-            prediction_df["Volume"] = avg_volume
-            # Concatenate historical and prediction data
-            combined_df = pd.concat([historical_price_df, prediction_df])
-            # Sort by index (date)
-            combined_df = combined_df.sort_index()
-            price_df = combined_df
-        else:
-            # No historical data available
-            pass
-
     fear_df = all_datasets.get(selected_fear_dataset) if selected_fear_dataset else pd.DataFrame()
 
     if price_df is None:
         st.error(f"No data available for {selected_price_dataset}.")
         return
 
+    # Filter data based on selected time frame
     start_year, end_year = time_frame
-    if not price_df.empty:
+    if price_df is not None and not price_df.empty:
         price_df = price_df[(price_df.index.year >= start_year) & (price_df.index.year <= end_year)]
-    if not fear_df.empty:
+    if fear_df is not None and not fear_df.empty:
         fear_df = fear_df[(fear_df.index.year >= start_year) & (fear_df.index.year <= end_year)]
 
+    # Plot chart with filtered data and capture debug outputs
     fig, debug_outputs = plot_market_chart(price_df, fear_df, market, ma_window)
     st.plotly_chart(fig, use_container_width=True)
 
+    # Show raw data
     if st.sidebar.checkbox("Show Raw Data"):
-        st.subheader(f"Price Data - {selected_price_dataset}")
-        st.dataframe(price_df.style.set_table_styles(
-            [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
-             {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
-        ))
-        if not fear_df.empty:
-            st.subheader(f"Fear & Greed Data - {selected_fear_dataset}")
-            st.dataframe(fear_df.style.set_table_styles(
+        if market == "Bitcoin (BTC)":
+            st.subheader(f"Price Data - {selected_price_dataset}")
+            st.dataframe(price_df.style.set_table_styles(
                 [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
                  {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
             ))
-        st.write("")
+            if not fear_df.empty:
+                st.subheader(f"Fear & Greed Data - {selected_fear_dataset}")
+                st.dataframe(fear_df.style.set_table_styles(
+                    [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
+                     {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
+                ))
+        elif market == "Nasdaq":
+            st.subheader(f"Price Data - {selected_price_dataset}")
+            st.dataframe(price_df.style.set_table_styles(
+                [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
+                 {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
+            ))
+            if not fear_df.empty:
+                st.subheader(f"Fear & Greed Data - {selected_fear_dataset}")
+                st.dataframe(fear_df.style.set_table_styles(
+                    [{'selector': 'th', 'props': [('font-size', '14px'), ('text-align', 'center')]},
+                     {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'right')]}]
+                ))
+        st.write("")  # Add spacing
 
+    # Show API and debug info behind a button at the bottom
     if st.sidebar.button("Show API & Debug Info"):
         st.session_state.show_api_debug = not st.session_state.show_api_debug
 
@@ -467,6 +597,7 @@ def main():
             st.write(list(historical_datasets.keys()))
             st.write("**Available Prediction Datasets:**")
             st.write(list(prediction_datasets.keys()))
+            # Display debug outputs from plot_market_chart
             for label, output in debug_outputs:
                 st.write(f"**{label}**")
                 st.write(output)

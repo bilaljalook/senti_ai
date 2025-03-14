@@ -1,1 +1,14 @@
 streamlit
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+plotly
+xgboost
+lightgbm
+catboost
+shap
+dtreeviz
+pdpbox
+shapash

@@ -6,7 +6,7 @@
 #font='sans serif'
 
 
-[theme]
-base="light"
-primaryColor="#7e4af4"
-textColor="#313341"
+#[theme]
+#base="light"
+#primaryColor="#7e4af4"
+#textColor="#313341"
