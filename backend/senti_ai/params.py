@@ -65,14 +65,12 @@ PREFECT_FLOW_NAME = os.environ.get("PREFECT_FLOW_NAME")
 PREFECT_LOG_LEVEL = os.environ.get("PREFECT_LOG_LEVEL")
 
 # LSTM model settings
-MODEL_NAME = os.getenv("MODEL_NAME", "sentiai_model")
-MODEL_EXPERIMENT = os.getenv("MODEL_EXPERIMENT", "sentiai_lstm_experiment")
-MODEL_INPUT_SEQ_LENGTH = int(os.getenv("LSTM_INPUT_SEQ_LENGTH", 30))
-MODEL_FORECAST_HORIZON = int(os.getenv("LSTM_FORECAST_HORIZON", 30))
-MODEL_MAX_EPOCHS = int(os.getenv("LSTM_MAX_EPOCHS", 100))
-MODEL_BATCH_SIZE = int(os.getenv("LSTM_BATCH_SIZE", 32))
-MODEL_LEARNING_RATE = float(os.getenv("LSTM_LEARNING_RATE", 0.001))
-MODEL_EARLY_STOPPING_PATIENCE = int(os.getenv("LSTM_EARLY_STOPPING_PATIENCE", 15))
+LSTM_INPUT_SEQ_LENGTH = int(os.getenv("LSTM_INPUT_SEQ_LENGTH", 30))  # Fixed variable name
+LSTM_FORECAST_HORIZON = int(os.getenv("LSTM_FORECAST_HORIZON", 30))  # Fixed variable name
+LSTM_MAX_EPOCHS = int(os.getenv("LSTM_MAX_EPOCHS", 100))  # Fixed variable name
+LSTM_BATCH_SIZE = int(os.getenv("LSTM_BATCH_SIZE", 32))
+LSTM_LEARNING_RATE = float(os.getenv("LSTM_LEARNING_RATE", 0.001))
+LSTM_EARLY_STOPPING_PATIENCE = int(os.getenv("LSTM_EARLY_STOPPING_PATIENCE", 15))
 
 # Data settings
 DATA_SOURCE = os.getenv("DATA_SOURCE", "bigquery")

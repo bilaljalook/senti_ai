@@ -17,9 +17,9 @@ from senti_ai.ml_logic.model import (
 from senti_ai.ml_logic.registry import save_model, save_results
 
 def train(
-    input_seq_length=LSTM_INPUT_SEQ_LENGTH,
-    forecast_horizon=LSTM_FORECAST_HORIZON,
-    epochs=LSTM_MAX_EPOCHS,
+    input_seq_length=LSTM_INPUT_SEQ_LENGTH,  # Fixed variable name
+    forecast_horizon=LSTM_FORECAST_HORIZON,  # Fixed variable name
+    epochs=LSTM_MAX_EPOCHS,  # Fixed variable name
     data_source=DATA_SOURCE,
     data_path=DATA_PATH
 ):

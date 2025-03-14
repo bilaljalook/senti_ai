@@ -35,11 +35,11 @@ train_basic:
 
 # Train the LSTM model with default parameters
 train_lstm:
-	python -m senti_ai.train_lstm
+	python -m senti_ai.ml_logic.model_training
 
 # Train the LSTM model with custom parameters
 train_lstm_custom:
-	python -m senti_ai.train_lstm --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON) --epochs $(EPOCHS)
+	python -m senti_ai.ml_logic.model_training --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON) --epochs $(EPOCHS)
 
 # Make predictions with the basic model
 predict_basic:
@@ -47,11 +47,11 @@ predict_basic:
 
 # Make predictions with the LSTM model
 predict_lstm:
-	python -m senti_ai.predict_lstm
+	python -m senti_ai.ml_logic.model_pred
 
 # Make predictions with the LSTM model with custom parameters
 predict_lstm_custom:
-	python -m senti_ai.predict_lstm --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON)
+	python -m senti_ai.ml_logic.model_pred --input_seq_length $(INPUT_SEQ_LENGTH) --forecast_horizon $(FORECAST_HORIZON)
 
 # Deploy a model to MLflow staging environment
 deploy_staging:
