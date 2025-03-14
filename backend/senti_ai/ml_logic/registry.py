@@ -49,19 +49,11 @@ def mlflow_run(experiment_name=None):
     return decorator
 
 def log_model_metrics(metrics_dict, model_type="basic"):
-    """
-    Decorator to log model metrics to MLflow.
-
-    Args:
-        metrics_dict: Dictionary of metrics to log
-        model_type: Type of model ("basic" or "lstm")
-    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Execute the function
             result = func(*args, **kwargs)
-
             # Log metrics if they exist in the result
             if isinstance(result, tuple) and len(result) >= 1:
                 metrics = result[0]
@@ -69,10 +61,8 @@ def log_model_metrics(metrics_dict, model_type="basic"):
                     for metric_name, metric_value in metrics.items():
                         if isinstance(metric_value, (int, float)):
                             mlflow.log_metric(metric_name, metric_value)
-
-            # Log model type
-            mlflow.log_param("model_type", model_type)
-
+            
+            # mlflow.log_param("model_type", model_type)
             return result
         return wrapper
     return decorator

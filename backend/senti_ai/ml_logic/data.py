@@ -100,16 +100,22 @@ def combine_all_data_and_save():
 
     if (df_combined.shape[1] == 17) & (not has_nan.any()):
 
-        for key in pushover_user_keys:
-            send_pushover_notification('Daily and hist data combined and saved successfully', user_key=key)
-        print(df_combined.head(5))
-        print(df_combined.info())
-        print(f"✅ {df_combined.head(5)}")
-        save_data_to_bq(df_combined,GCP_PROJECT_AHMET,BQ_DATASET,"raw", truncate=True)
+        #print(df_combined.head(5))
+        #print(df_combined.info())
+        #print(f"✅ {df_combined.head(5)}")
+        try:
+            save_data_to_bq(df_combined,GCP_PROJECT_AHMET,BQ_DATASET,"raw", truncate=True)
+        except:
+            [send_pushover_notification('Daily save to BQ failed.', user_key=key) for key in pushover_user_keys]
+        else:
+            [send_pushover_notification('Daily save to BQ succeeded.', user_key=key) for key in pushover_user_keys]
 
-    else:
-        for key in pushover_user_keys:
-            send_pushover_notification('Daily and hist data combination and save failed.', user_key=key)
+        try:
+            df_combined.to_csv(f"./all_data_{datetime.today().date()}.csv")
+        except:
+            [send_pushover_notification('Daily save to CSV succeeded.', user_key=key) for key in pushover_user_keys]
+        else:
+            [send_pushover_notification('Daily save to CSV succeeded.', user_key=key) for key in pushover_user_keys]
 
     return None
 
