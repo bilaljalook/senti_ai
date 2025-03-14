@@ -61,7 +61,7 @@ def log_model_metrics(metrics_dict, model_type="basic"):
                     for metric_name, metric_value in metrics.items():
                         if isinstance(metric_value, (int, float)):
                             mlflow.log_metric(metric_name, metric_value)
-            
+
             # mlflow.log_param("model_type", model_type)
             return result
         return wrapper
@@ -261,9 +261,9 @@ def create_mlflow_experiment():
 
     # Create experiments if they don't exist
     experiment_names = [
-        f"{MLFLOW_MODEL_NAME}_experiments",
-        f"{MLFLOW_MODEL_NAME}_deployments"
-    ]
+        MLFLOW_EXPERIMENT_PROD,
+        MLFLOW_EXPERIMENT_DEV
+        ]
 
     for exp_name in experiment_names:
         # Check if experiment exists
