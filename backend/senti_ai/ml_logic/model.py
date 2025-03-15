@@ -84,24 +84,35 @@ def load_and_preprocess_data(file_path, normalize=True):
 def create_sequences(X, y, input_sequence_length, forecast_horizon):
     """
     Create sequences for multi-step forecasting.
-
-    Args:
-        X: Features array
-        y: Target array
-        input_sequence_length: Number of time steps to use as input
-        forecast_horizon: Number of time steps to predict
-
-    Returns:
-        X_seq: Input sequences
-        y_seq: Target sequences for forecasting
     """
+    print(f"Input shapes - X: {X.shape}, y: {y.shape}")
+    print(f"Sequence parameters - input_length: {input_sequence_length}, forecast_horizon: {forecast_horizon}")
+
     X_seq, y_seq = [], []
 
-    for i in range(len(X) - input_sequence_length - forecast_horizon + 1):
+    # Add shape checks and boundary validation
+    if len(X) != len(y):
+        raise ValueError(f"X and y must have the same length. Got X: {len(X)}, y: {len(y)}")
+
+    # Calculate maximum valid index
+    max_idx = len(X) - input_sequence_length - forecast_horizon + 1
+
+    if max_idx <= 0:
+        print("WARNING: Not enough data to create sequences with these parameters")
+        return np.array(X_seq), np.array(y_seq)
+
+    print(f"Will create {max_idx} valid sequences")
+
+    for i in range(max_idx):
         X_seq.append(X[i:i + input_sequence_length])
         y_seq.append(y[i + input_sequence_length:i + input_sequence_length + forecast_horizon])
 
-    return np.array(X_seq), np.array(y_seq)
+    X_seq_array = np.array(X_seq)
+    y_seq_array = np.array(y_seq)
+
+    print(f"Output sequence shapes - X_seq: {X_seq_array.shape}, y_seq: {y_seq_array.shape}")
+
+    return X_seq_array, y_seq_array
 
 def build_model(input_shape, output_length, dropout_rate=0.2):
     """

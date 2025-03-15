@@ -24,3 +24,5 @@ requests-mock
 datetime
 mlflow
 seaborn
+statsmodels
+click

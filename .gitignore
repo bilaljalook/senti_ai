@@ -28,3 +28,6 @@ mlruns
 senti_ai.svg
 backend/senti_ai.svg
 backend/dist/sentiai-0.0.1.tar.gz
+
+*.png
+*.h5
