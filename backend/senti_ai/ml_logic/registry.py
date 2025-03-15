@@ -259,11 +259,18 @@ def create_mlflow_experiment():
     """
     client = MlflowClient()
 
+    # Get environment variables with defaults
+    mlflow_exp = os.environ.get("MLFLOW_EXPERIMENT", "sentiai_experiment")
+    mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME", "sentiai_model")
+
     # Create experiments if they don't exist
     experiment_names = [
-        MLFLOW_EXPERIMENT_PROD,
-        MLFLOW_EXPERIMENT_DEV
-        ]
+        mlflow_exp,  # From your .env
+        f"{mlflow_model_name}_experiments",  # Used by your decorators
+        f"{mlflow_model_name}_deployments",  # Used by your decorators
+        os.environ.get("MLFLOW_EXPERIMENT_PROD", "sentiai_model_prod"),  # Default if not set
+        os.environ.get("MLFLOW_EXPERIMENT_DEV", "sentiai_model_dev")   # Default if not set
+    ]
 
     for exp_name in experiment_names:
         # Check if experiment exists
@@ -271,11 +278,14 @@ def create_mlflow_experiment():
 
         if experiment is None:
             # Create experiment
-            experiment_id = mlflow.create_experiment(
-                exp_name,
-                artifact_location=f"./mlruns/{exp_name}"
-            )
-            print(f"Created experiment {exp_name} with ID {experiment_id}")
+            try:
+                experiment_id = mlflow.create_experiment(
+                    exp_name,
+                    artifact_location=f"./mlruns/{exp_name}"
+                )
+                print(f"Created experiment {exp_name} with ID {experiment_id}")
+            except Exception as e:
+                print(f"Error creating experiment {exp_name}: {e}")
         else:
             print(f"Experiment {exp_name} already exists with ID {experiment.experiment_id}")
 

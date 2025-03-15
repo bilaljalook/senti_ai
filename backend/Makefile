@@ -117,17 +117,6 @@ test_lstm:
 ################### DATA SOURCES ACTIONS ################
 
 # Data sources: targets for monthly data imports
-ML_DIR=~/.lewagon/mlops
-HTTPS_DIR=https://storage.googleapis.com/datascience-mlops/taxi-fare-ny/
-GS_DIR=gs://datascience-mlops/taxi-fare-ny
-
-show_sources_all:
-	-ls -laR ~/.lewagon/mlops/data
-	-bq ls ${BQ_DATASET}
-	-bq show ${BQ_DATASET}.processed_1k
-	-bq show ${BQ_DATASET}.processed_200k
-	-bq show ${BQ_DATASET}.processed_all
-	-gsutil ls gs://${BUCKET_NAME}
 
 reset_local_files:
 	rm -rf ${ML_DIR}
@@ -195,3 +184,34 @@ help:
 	@echo "make run_lstm_pipeline            - Run full LSTM pipeline"
 	@echo "make run_basic_pipeline           - Run full basic model pipeline"
 	@echo "make clean_mlflow                 - Clean MLflow artifacts"
+
+
+# Run enhanced model with defaults
+run_enhanced_model:
+	@python -m senti_ai.run_enhanced_model
+
+# Run enhanced model with baseline comparison only
+run_enhanced_with_baselines:
+	@python -m senti_ai.run_enhanced_model --skip_cv
+
+# Run enhanced model with cross-validation only
+run_enhanced_with_cv:
+	@python -m senti_ai.run_enhanced_model --skip_baselines
+
+# Run enhanced model with custom parameters
+run_enhanced_custom:
+	@python -m senti_ai.run_enhanced_model \
+		--input_seq_length=$(INPUT_SEQ_LENGTH) \
+		--forecast_horizon=$(FORECAST_HORIZON) \
+		--epochs=$(EPOCHS) \
+		--cv_splits=$(CV_SPLITS) \
+		--cv_type=$(CV_TYPE)
+
+# Show model comparison report
+model_comparison:
+	@python -m senti_ai.run_model_comparison
+
+# Setup enhanced model environment
+setup_enhanced:
+	@pip install statsmodels click
+	@echo "✅ Enhanced model dependencies installed"
