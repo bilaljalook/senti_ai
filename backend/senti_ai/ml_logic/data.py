@@ -172,38 +172,38 @@ def fetch_daily_data():
 
     #### Construct final dataframe START
 
-    # df_result = pd.DataFrame({
-    #     "date": datetime.today().date(),
-    #     "BTC_Close":df_today['Close']['BTC-USD'],
-    #     "BTC_High":df_today['High']['BTC-USD'],
-    #     "BTC_Low":df_today['Low']['BTC-USD'],
-    #     "BTC_Open":df_today['Open']['BTC-USD'],
-    #     "BTC_Volume":df_today['Volume']['BTC-USD'],
-    #     "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
-    #     "NASDAQ_Close":df_today['Close']['^IXIC'],
-    #     "NASDAQ_High":df_today['High']['^IXIC'],
-    #     "NASDAQ_Low":df_today['Low']['^IXIC'],
-    #     "NASDAQ_Open":df_today['Open']['^IXIC'],
-    #     "NASDAQ_Volume":df_today['Volume']['^IXIC'],
-    #     "NASDAQ_sentiment_score":stock_fear_greed_df,
-    #     }, index=[0])
-
-    print(f"✅ Putting together mock df_result")
     df_result = pd.DataFrame({
         "date": datetime.today().date(),
-        "BTC_Close":81461.62,
-        "BTC_High":81961.26,
-        "BTC_Low":76808.10,
-        "BTC_Open":78582.16,
-        "BTC_Volume":58110119936,
-        "BTC_sentiment_score":24,
-        "NASDAQ_Close":17436.10,
-        "NASDAQ_High":17687.40,
-        "NASDAQ_Low":17238.24,
-        "NASDAQ_Open":17443.09,
-        "NASDAQ_Volume":9177320000,
-        "NASDAQ_sentiment_score":13,
+        "BTC_Close":df_today['Close']['BTC-USD'],
+        "BTC_High":df_today['High']['BTC-USD'],
+        "BTC_Low":df_today['Low']['BTC-USD'],
+        "BTC_Open":df_today['Open']['BTC-USD'],
+        "BTC_Volume":df_today['Volume']['BTC-USD'],
+        "BTC_sentiment_score":int(crypto_fear_greed_df[0]['value']),
+        "NASDAQ_Close":df_today['Close']['^IXIC'],
+        "NASDAQ_High":df_today['High']['^IXIC'],
+        "NASDAQ_Low":df_today['Low']['^IXIC'],
+        "NASDAQ_Open":df_today['Open']['^IXIC'],
+        "NASDAQ_Volume":df_today['Volume']['^IXIC'],
+        "NASDAQ_sentiment_score":stock_fear_greed_df,
         }, index=[0])
+
+    # print(f"✅ Putting together mock df_result")
+    # df_result = pd.DataFrame({
+    #     "date": datetime.today().date(),
+    #     "BTC_Close":81461.62,
+    #     "BTC_High":81961.26,
+    #     "BTC_Low":76808.10,
+    #     "BTC_Open":78582.16,
+    #     "BTC_Volume":58110119936,
+    #     "BTC_sentiment_score":24,
+    #     "NASDAQ_Close":17436.10,
+    #     "NASDAQ_High":17687.40,
+    #     "NASDAQ_Low":17238.24,
+    #     "NASDAQ_Open":17443.09,
+    #     "NASDAQ_Volume":9177320000,
+    #     "NASDAQ_sentiment_score":13,
+    #     }, index=[0])
 
     print(f"✅ df_result.shape[0] should be 1: {df_result.shape[0]}")
     print(f"✅ df_result.shape[1] should be 13: {df_result.shape[1]}")
